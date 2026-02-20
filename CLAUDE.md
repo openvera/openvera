@@ -95,6 +95,6 @@ claude -p "/match-documents" --dangerously-skip-permissions
 ## Rules
 
 - Don't install Flask locally — use Docker for running the app, `py_compile` for syntax checks.
-- Schema changes must update both the migration and `scripts/init_db.py`.
+- Schema changes must update `scripts/init_db.py`.
 - SIE4 export uses Swedish BAS-kontoplan (chart of accounts).
 - Frontend must be pre-built before `docker compose build`.
