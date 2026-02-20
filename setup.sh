@@ -102,7 +102,7 @@ fi
 section "📦 Setting up database"
 
 DATA_DIR="./data"
-DB_FILE="${DATA_DIR}/vera.db"
+DB_FILE="${DATA_DIR}/openvera.db"
 
 mkdir -p "${DATA_DIR}"
 
@@ -142,7 +142,7 @@ success "Docker image built"
 
 if [ "$NEEDS_INIT" = true ]; then
     info "Initializing fresh database schema..."
-    $COMPOSE_CMD run --rm vera python /vera/scripts/init_db.py
+    $COMPOSE_CMD run --rm openvera python /vera/scripts/init_db.py
     success "Database schema created"
 
     section "🏢 Add companies"
@@ -158,7 +158,7 @@ if [ "$NEEDS_INIT" = true ]; then
         read -rp "     Fiscal year start [01-01]: " fiscal_start
         fiscal_start="${fiscal_start:-01-01}"
 
-        $COMPOSE_CMD run --rm vera python -c "
+        $COMPOSE_CMD run --rm openvera python -c "
 import sys; sys.path.insert(0, '/vera/scripts')
 from init_db import add_company
 from config import DB_PATH
@@ -196,7 +196,7 @@ echo ""
 
 if [ $WAITED -ge $MAX_WAIT ]; then
     error "Service failed to start within ${MAX_WAIT}s"
-    info "Check logs: $COMPOSE_CMD logs vera"
+    info "Check logs: $COMPOSE_CMD logs openvera"
     exit 1
 fi
 
@@ -206,14 +206,14 @@ success "Service is healthy (responded in ${WAITED}s)"
 
 section "✅ Setup complete!"
 
-echo -e "  ${BOLD}Vera is running at:${NC}"
+echo -e "  ${BOLD}OpenVera is running at:${NC}"
 echo ""
 echo -e "    ${CYAN}http://localhost:8888${NC}"
 echo ""
 echo -e "  ${BOLD}Useful commands:${NC}"
 echo ""
-echo "    View logs:       $COMPOSE_CMD logs -f vera"
+echo "    View logs:       $COMPOSE_CMD logs -f openvera"
 echo "    Stop:            $COMPOSE_CMD down"
-echo "    Restart:         $COMPOSE_CMD restart vera"
+echo "    Restart:         $COMPOSE_CMD restart openvera"
 echo "    Rebuild:         $COMPOSE_CMD up -d --build"
 echo ""

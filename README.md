@@ -32,14 +32,14 @@ The setup script will:
 ```bash
 docker compose up -d --build    # Rebuild and start
 docker compose down              # Stop
-docker compose restart vera      # Restart
-docker compose logs -f vera      # Follow logs
+docker compose restart openvera      # Restart
+docker compose logs -f openvera      # Follow logs
 ```
 
 Run scripts inside the container:
 
 ```bash
-docker compose exec vera python /vera/scripts/<script>.py
+docker compose exec openvera python /vera/scripts/<script>.py
 ```
 
 ## Project Structure
@@ -63,20 +63,20 @@ Copy `.env.example` to `.env` (done automatically by `setup.sh`).
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `SECRET_KEY` | random | Flask secret key |
-| `VERA_BASE_DIR` | `./data` | Base path for database |
-| `VERA_FILES_DIR` | `$VERA_BASE_DIR/files` | Document file storage |
-| `VERA_PORT` | `8888` | Application port |
-| `VERA_ENV` | `prod` | Runtime mode (`dev` enables auto-reload) |
+| `OPENVERA_BASE_DIR` | `./data` | Base path for database |
+| `OPENVERA_FILES_DIR` | `$OPENVERA_BASE_DIR/files` | Document file storage |
+| `OPENVERA_PORT` | `8888` | Application port |
+| `OPENVERA_ENV` | `prod` | Runtime mode (`dev` enables auto-reload) |
 | `ENABLE_BANKING_APP_ID` | — | Enable Banking integration |
 | `ENABLE_BANKING_PRIVATE_KEY_PATH` | — | Enable Banking private key |
-| `VERA_ADMIN_TOKEN` | — | Auth token for admin endpoints |
+| `OPENVERA_ADMIN_TOKEN` | — | Auth token for admin endpoints |
 
 ## File Storage
 
-Document files are stored under `VERA_FILES_DIR`:
+Document files are stored under `OPENVERA_FILES_DIR`:
 
 ```text
-vera-data/
+openvera-data/
   {company-slug}/
     {year}/
       {filename}       # All documents flat — one folder per year

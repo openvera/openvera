@@ -40,7 +40,7 @@ export default function Layout() {
       <div className="bg-base-100 border-b border-base-300 px-6 h-16 flex items-center">
         <div className="flex flex-1 gap-2 items-center">
           <span className="text-xl font-bold tracking-tight text-primary">
-            VERA
+            OPENVERA
           </span>
           <span className="text-[10px] font-medium uppercase tracking-widest text-base-content/30 hidden sm:inline">
             Bokföring

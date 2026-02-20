@@ -11,7 +11,7 @@ Adds:
 - UNIQUE indexes for dedup columns
 
 Safe to run on populated databases. Uses IF NOT EXISTS / try-except for idempotency.
-Run before app startup: docker compose exec vera python /vera/scripts/migrate_003_enable_banking.py
+Run before app startup: docker compose exec openvera python /vera/scripts/migrate_003_enable_banking.py
 """
 
 import sqlite3

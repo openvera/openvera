@@ -19,7 +19,7 @@ interface CompanyContextValue {
 
 const CompanyContext = createContext<CompanyContextValue | null>(null)
 
-const STORAGE_KEY = 'vera-company-id'
+const STORAGE_KEY = 'openvera-company-id'
 
 export function CompanyProvider({ children }: { children: ReactNode }) {
   const { data: companies = [], isLoading } = useQuery({

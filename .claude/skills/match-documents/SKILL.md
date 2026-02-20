@@ -96,10 +96,10 @@ For each company with unmatched documents:
 
 ## Output
 
-After processing, check if the environment variable `VERA_REPORT_FORMAT` is set by running `echo $VERA_REPORT_FORMAT`.
+After processing, check if the environment variable `OPENVERA_REPORT_FORMAT` is set by running `echo $OPENVERA_REPORT_FORMAT`.
 
-- If `VERA_REPORT_FORMAT=text` — print a concise plain-text summary (markdown table format, suitable for piping or further AI processing).
-- Otherwise (default) — generate an HTML report, save to `/tmp/vera-match-report.html`, and open with `open /tmp/vera-match-report.html`.
+- If `OPENVERA_REPORT_FORMAT=text` — print a concise plain-text summary (markdown table format, suitable for piping or further AI processing).
+- Otherwise (default) — generate an HTML report, save to `/tmp/openvera-match-report.html`, and open with `open /tmp/openvera-match-report.html`.
 
 The report should be a single self-contained HTML file with inline CSS (Tailwind via CDN is fine). Use a clean, modern design with:
 

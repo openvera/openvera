@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Reorganize vera-data folder structure.
+"""Reorganize openvera-data folder structure.
 
 Moves files into a flat {company-slug}/{year}/{filename} structure.
 Updates DB paths to match. Handles non-DB files separately.
 
 Target structure:
-    vera-data/
+    openvera-data/
       {company-slug}/{year}/{filename}   # All documents flat per year
       inbox/                              # Unprocessed / unassigned
 
@@ -171,7 +171,7 @@ def reorganize_extra_files(dry_run=False, verbose=False):
             rel_path = str(rel_dir / fname)
 
             # Skip DB file, CSVs, JSON metadata
-            if fname == 'vera.db' or fname.endswith('.csv') or fname == 'inbox.json':
+            if fname == 'openvera.db' or fname.endswith('.csv') or fname == 'inbox.json':
                 stats['skipped'] += 1
                 continue
 
@@ -237,7 +237,7 @@ def cleanup_empty_dirs(dry_run=False, verbose=False):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Reorganize vera-data folder structure')
+    parser = argparse.ArgumentParser(description='Reorganize openvera-data folder structure')
     parser.add_argument('--dry-run', action='store_true', help='Preview changes without moving files')
     parser.add_argument('--verbose', action='store_true', help='Show each file operation')
     args = parser.parse_args()

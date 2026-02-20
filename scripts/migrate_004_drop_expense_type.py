@@ -6,7 +6,7 @@ The expense_type column was redundant — it stored a human-readable name
 that maps 1:1 to accounting_code via the bas_accounts table.
 
 Safe to run multiple times (checks if column exists first).
-Run: docker compose exec vera python /vera/scripts/migrate_004_drop_expense_type.py
+Run: docker compose exec openvera python /vera/scripts/migrate_004_drop_expense_type.py
 """
 
 import sqlite3

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Vera - Bokföring Dashboard"""
+"""OpenVera — Bokföring"""
 
 from flask import Flask, send_from_directory
 from flask_wtf.csrf import CSRFProtect, generate_csrf
 import os
 
-from config import DB_PATH, PORT, IS_DEV, VERA_ENV
+from config import DB_PATH, PORT, IS_DEV, OPENVERA_ENV
 
 FRONTEND_DIST = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'frontend', 'dist')
 
@@ -62,8 +62,8 @@ if os.path.isdir(FRONTEND_DIST):
 
 
 if __name__ == "__main__":
-    print("Starting Vera")
-    print(f"Environment: {VERA_ENV}")
+    print("Starting OpenVera")
+    print(f"Environment: {OPENVERA_ENV}")
     print(f"Database: {DB_PATH}")
     print(f"Open http://localhost:{PORT}")
     app.run(host="0.0.0.0", port=PORT, debug=IS_DEV)

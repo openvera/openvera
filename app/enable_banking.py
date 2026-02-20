@@ -1,5 +1,5 @@
 """
-Enable Banking API client for Vera.
+Enable Banking API client for OpenVera.
 
 Wraps the Enable Banking REST API (https://api.enablebanking.com) for AISP
 (Account Information Service Provider) operations: consent authorization,

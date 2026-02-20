@@ -1,20 +1,20 @@
 services:
-  vera:
+  openvera:
     build: .
     container_name: openvera
     ports:
       - "8888:8888"
     volumes:
       - ./data:/data
-      - ${VERA_FILES_DIR:-./data/files}:/data/files
+      - ${OPENVERA_FILES_DIR:-./data/files}:/data/files
       - ./app:/vera/app
       - ./scripts:/vera/scripts
     environment:
-      - VERA_ENV=dev
-      - VERA_BASE_DIR=/data
-      - VERA_FILES_DIR=/data/files
+      - OPENVERA_ENV=dev
+      - OPENVERA_BASE_DIR=/data
+      - OPENVERA_FILES_DIR=/data/files
       - SECRET_KEY=${SECRET_KEY}
       - ENABLE_BANKING_APP_ID=${ENABLE_BANKING_APP_ID:-}
       - ENABLE_BANKING_PRIVATE_KEY_PATH=${ENABLE_BANKING_PRIVATE_KEY_PATH:-}
-      - VERA_ADMIN_TOKEN=${VERA_ADMIN_TOKEN:-}
+      - OPENVERA_ADMIN_TOKEN=${OPENVERA_ADMIN_TOKEN:-}
     restart: unless-stopped

@@ -124,7 +124,7 @@ def generate_sie4(company_id, year_from, year_to):
 
     # Header
     lines.append('#FLAGGA 0')
-    lines.append('#PROGRAM "Vera" "1.0"')
+    lines.append('#PROGRAM "OpenVera" "1.0"')
     lines.append('#FORMAT PC8')
     lines.append('#GEN ' + datetime.now().strftime('%Y%m%d'))
     lines.append('#SIETYP 4')

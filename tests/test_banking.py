@@ -12,7 +12,7 @@ Covers:
   7. Backward-compatible CSV import
 
 Run inside Docker:
-    docker compose exec vera python -m pytest /vera/tests/test_banking.py -v
+    docker compose exec openvera python -m pytest /vera/tests/test_banking.py -v
 """
 
 import hashlib
@@ -53,7 +53,7 @@ def _init_test_db(db_path):
     mod = importlib.util.module_from_spec(spec)
 
     # Patch DB_PATH before loading
-    with patch.dict(os.environ, {'VERA_BASE_DIR': str(Path(db_path).parent)}):
+    with patch.dict(os.environ, {'OPENVERA_BASE_DIR': str(Path(db_path).parent)}):
         # Re-import config with patched env
         import importlib
         if 'config' in sys.modules:
@@ -126,8 +126,8 @@ def app_client(test_db, monkeypatch):
     conn, db_path = test_db
 
     # Patch config module
-    monkeypatch.setenv('VERA_BASE_DIR', str(Path(db_path).parent))
-    monkeypatch.setenv('VERA_ADMIN_TOKEN', 'test-admin-token-secret')
+    monkeypatch.setenv('OPENVERA_BASE_DIR', str(Path(db_path).parent))
+    monkeypatch.setenv('OPENVERA_ADMIN_TOKEN', 'test-admin-token-secret')
     monkeypatch.setenv('ENABLE_BANKING_APP_ID', 'test-app-id')
     monkeypatch.setenv('ENABLE_BANKING_PRIVATE_KEY_PATH', '/tmp/test-key.pem')
 
@@ -139,7 +139,7 @@ def app_client(test_db, monkeypatch):
     # Patch DB_PATH in config
     import config
     monkeypatch.setattr(config, 'DB_PATH', Path(db_path))
-    monkeypatch.setattr(config, 'VERA_ADMIN_TOKEN', 'test-admin-token-secret')
+    monkeypatch.setattr(config, 'OPENVERA_ADMIN_TOKEN', 'test-admin-token-secret')
     monkeypatch.setattr(config, 'ENABLE_BANKING_APP_ID', 'test-app-id')
     monkeypatch.setattr(config, 'ENABLE_BANKING_PRIVATE_KEY_PATH', '/tmp/test-key.pem')
 
@@ -262,7 +262,7 @@ class TestOAuthStateValidation:
 # ---------------------------------------------------------------------------
 
 class TestAdminTokenAuth:
-    """Test VERA_ADMIN_TOKEN enforcement on banking routes."""
+    """Test OPENVERA_ADMIN_TOKEN enforcement on banking routes."""
 
     def test_sessions_rejects_no_token(self, app_client):
         client, conn = app_client
@@ -310,7 +310,7 @@ class TestAdminTokenAuth:
 # ---------------------------------------------------------------------------
 
 class TestTransactionMapping:
-    """Test Enable Banking -> Vera transaction field mapping."""
+    """Test Enable Banking -> OpenVera transaction field mapping."""
 
     def test_debit_transaction_mapping(self):
         sys.path.insert(0, SCRIPTS_DIR)
@@ -602,7 +602,7 @@ class TestMigration:
         conn.close()
 
         # Run migration
-        with patch.dict(os.environ, {'VERA_BASE_DIR': str(tmp_path)}):
+        with patch.dict(os.environ, {'OPENVERA_BASE_DIR': str(tmp_path)}):
             # Reload config to pick up new path
             if 'config' in sys.modules:
                 import importlib

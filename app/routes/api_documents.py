@@ -637,7 +637,7 @@ def api_file_tree():
 
         # Skip sensitive / non-document files
         _skip_ext = {'.pem', '.key', '.env', '.db', '.db-journal', '.db-wal', '.db-shm'}
-        _skip_names = {'vera.db', 'inbox.json'}
+        _skip_names = {'openvera.db', 'inbox.json'}
 
         for entry in entries:
             if entry.name.startswith('.') or entry.name in _skip_names:

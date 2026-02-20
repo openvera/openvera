@@ -3,7 +3,7 @@
 Migration: Remove vendor and extracted_text columns from documents table.
 Also fixes 3 outlier docs (414-416) with flat extracted_json schema.
 
-Run: docker compose exec vera python /vera/scripts/migrate_remove_vendor_extracted_text.py
+Run: docker compose exec openvera python /vera/scripts/migrate_remove_vendor_extracted_text.py
   or: python3 scripts/migrate_remove_vendor_extracted_text.py
 """
 

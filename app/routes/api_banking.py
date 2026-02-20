@@ -7,7 +7,7 @@ from functools import wraps
 
 from flask import Blueprint, jsonify, request, redirect, url_for
 
-from config import VERA_ADMIN_TOKEN, ENABLE_BANKING_APP_ID
+from config import OPENVERA_ADMIN_TOKEN, ENABLE_BANKING_APP_ID
 from db import get_db, get_company
 
 logger = logging.getLogger(__name__)
@@ -22,10 +22,10 @@ OAUTH_STATE_TTL_MINUTES = 10
 # ---------------------------------------------------------------------------
 
 def require_admin_token(f):
-    """Require VERA_ADMIN_TOKEN for access. Returns 401 if missing or invalid."""
+    """Require OPENVERA_ADMIN_TOKEN for access. Returns 401 if missing or invalid."""
     @wraps(f)
     def decorated(*args, **kwargs):
-        if not VERA_ADMIN_TOKEN:
+        if not OPENVERA_ADMIN_TOKEN:
             return jsonify({'error': 'Admin token not configured'}), 500
 
         auth_header = request.headers.get('Authorization', '')
@@ -36,7 +36,7 @@ def require_admin_token(f):
         else:
             token = request.args.get('token')
 
-        if not token or not secrets.compare_digest(token, VERA_ADMIN_TOKEN):
+        if not token or not secrets.compare_digest(token, OPENVERA_ADMIN_TOKEN):
             return jsonify({'error': 'Unauthorized'}), 401
 
         return f(*args, **kwargs)
@@ -194,7 +194,7 @@ def banking_callback():
                 if isinstance(aid, dict) and aid.get('identification'):
                     identifiers.append(aid['identification'])
 
-            # Try to match against existing Vera accounts
+            # Try to match against existing OpenVera accounts
             for identifier in identifiers:
                 if not identifier:
                     continue

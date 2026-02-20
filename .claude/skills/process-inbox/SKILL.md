@@ -16,15 +16,15 @@ Process all pending files (files without document records) by extracting structu
 
 For each pending file:
 
-4. **View the file** using the Read tool on the file path (resolve relative paths under `VERA_FILES_DIR` — check `app/config.py` for the default). PDFs can be read directly.
+4. **View the file** using the Read tool on the file path (resolve relative paths under `OPENVERA_FILES_DIR` — check `app/config.py` for the default). PDFs can be read directly.
 
 5. **Extract structured data** following the schema in `agent-docs/main/extraction-schema.md`. Extract everything useful from the document — the schema defines the standard fields, but include any additional relevant data in the `extra` object. Be thorough.
 
 6. **Match parties** against the existing parties list. Check both vendor and customer names/org numbers against known parties. Use `patterns` arrays for fuzzy matching. If a party doesn't exist yet, note it but don't create it — use `party_id: null`.
 
 7. **Decide: one or two documents?**
-   - If both vendor AND customer are companies in Vera (e.g., an invoice from Insector AB to Wingframe AB), create **two** document records — one for each company.
-   - If only one side is a Vera company, create **one** document record for that company.
+   - If both vendor AND customer are companies in OpenVera (e.g., an invoice from Insector AB to Wingframe AB), create **two** document records — one for each company.
+   - If only one side is an OpenVera company, create **one** document record for that company.
    - Set the `party_id` to the **counterparty** (the other side). E.g., if Wingframe AB received an invoice from Stripe, the document belongs to Wingframe's company_id with party_id pointing to Stripe.
 
 8. **Create document(s)** via POST, including VAT fields:
@@ -57,7 +57,7 @@ For each pending file:
 ## Document type mapping
 
 Map `extracted_json.document_type` to `doc_type` column values:
-- `invoice` → `invoice` (incoming) or `outgoing_invoice` (if the Vera company is the vendor)
+- `invoice` → `invoice` (incoming) or `outgoing_invoice` (if the OpenVera company is the vendor)
 - `receipt` / `kvittens` → `receipt`
 - `salary` → `salary`
 - `credit_note` → `credit_note`

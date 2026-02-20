@@ -22,7 +22,7 @@ Open-source Swedish bookkeeping system (bokföring). Flask backend, React fronte
 
 ## Database
 
-SQLite at `$VERA_BASE_DIR/vera.db`. Core relationship:
+SQLite at `$OPENVERA_BASE_DIR/openvera.db`. Core relationship:
 
 ```
 companies → accounts → transactions ↔ matches ↔ documents ← files
@@ -43,7 +43,7 @@ Document extraction data is stored in `documents.extracted_json`.
 # Daily commands
 docker compose up -d          # Start
 docker compose down           # Stop
-docker compose logs -f vera   # Logs
+docker compose logs -f openvera   # Logs
 docker compose up -d --build  # Rebuild after code changes
 
 # Frontend development
@@ -53,7 +53,7 @@ cd frontend && npm install && npm run dev
 cd frontend && npm install && npm run build
 
 # Run scripts inside container
-docker compose exec vera python /vera/scripts/init_db.py
+docker compose exec openvera python /vera/scripts/init_db.py
 
 # Syntax check (Flask not installed locally)
 python3 -m py_compile app/routes/pages.py
@@ -63,11 +63,11 @@ python3 -m py_compile app/routes/pages.py
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `VERA_BASE_DIR` | `./data` | Base directory for database |
-| `VERA_FILES_DIR` | `$VERA_BASE_DIR/files` | Document file storage |
+| `OPENVERA_BASE_DIR` | `./data` | Base directory for database |
+| `OPENVERA_FILES_DIR` | `$OPENVERA_BASE_DIR/files` | Document file storage |
 | `SECRET_KEY` | random | Flask session secret (set in `.env`) |
-| `VERA_PORT` | `8888` | Application port |
-| `VERA_ENV` | `prod` | Runtime mode (`dev` enables auto-reload) |
+| `OPENVERA_PORT` | `8888` | Application port |
+| `OPENVERA_ENV` | `prod` | Runtime mode (`dev` enables auto-reload) |
 
 ## Docker
 

@@ -16,7 +16,7 @@ Usage:
     python fetch_transactions.py --dry-run
 
 Run via Docker:
-    docker compose exec -T vera python /vera/scripts/fetch_transactions.py
+    docker compose exec -T openvera python /vera/scripts/fetch_transactions.py
 """
 
 import argparse
@@ -53,7 +53,7 @@ def compute_import_fingerprint(date, amount, reference, balance):
 
 
 def map_transaction(eb_txn):
-    """Map an Enable Banking transaction to Vera's schema fields.
+    """Map an Enable Banking transaction to OpenVera's schema fields.
 
     Returns a dict with: date, amount, balance, reference, raw_reference, external_id.
     """
