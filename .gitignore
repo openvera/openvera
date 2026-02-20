@@ -72,5 +72,12 @@ app/static/css/
 frontend/dist/
 frontend/node_modules/
 
+# Packages
+packages/*/node_modules/
+packages/*/dist/
+
+# TypeScript build cache
+*.tsbuildinfo
+
 # Chrome DevTools MCP (local dev)
 .mcp.json
