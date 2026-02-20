@@ -39,7 +39,7 @@ docker compose logs -f openvera      # Follow logs
 Run scripts inside the container:
 
 ```bash
-docker compose exec openvera python /vera/scripts/<script>.py
+docker compose exec openvera python /openvera/scripts/<script>.py
 ```
 
 ## Project Structure

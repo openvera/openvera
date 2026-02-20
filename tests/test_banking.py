@@ -12,7 +12,7 @@ Covers:
   7. Backward-compatible CSV import
 
 Run inside Docker:
-    docker compose exec openvera python -m pytest /vera/tests/test_banking.py -v
+    docker compose exec openvera python -m pytest /openvera/tests/test_banking.py -v
 """
 
 import hashlib

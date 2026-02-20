@@ -142,7 +142,7 @@ success "Docker image built"
 
 if [ "$NEEDS_INIT" = true ]; then
     info "Initializing fresh database schema..."
-    $COMPOSE_CMD run --rm openvera python /vera/scripts/init_db.py
+    $COMPOSE_CMD run --rm openvera python /openvera/scripts/init_db.py
     success "Database schema created"
 
     section "🏢 Add companies"
@@ -159,7 +159,7 @@ if [ "$NEEDS_INIT" = true ]; then
         fiscal_start="${fiscal_start:-01-01}"
 
         $COMPOSE_CMD run --rm openvera python -c "
-import sys; sys.path.insert(0, '/vera/scripts')
+import sys; sys.path.insert(0, '/openvera/scripts')
 from init_db import add_company
 from config import DB_PATH
 add_company(str(DB_PATH), '''$company_name''', '''$org_number''', '''$fiscal_start''')

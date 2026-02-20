@@ -16,7 +16,7 @@ Usage:
     python fetch_transactions.py --dry-run
 
 Run via Docker:
-    docker compose exec -T openvera python /vera/scripts/fetch_transactions.py
+    docker compose exec -T openvera python /openvera/scripts/fetch_transactions.py
 """
 
 import argparse

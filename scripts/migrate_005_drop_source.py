@@ -6,7 +6,7 @@ The source column tracked how documents were ingested (manual, migrated, email, 
 but provides no value to the user. The ingest pipeline no longer needs it.
 
 Safe to run multiple times (checks if column exists first).
-Run: docker compose exec openvera python /vera/scripts/migrate_005_drop_source.py
+Run: docker compose exec openvera python /openvera/scripts/migrate_005_drop_source.py
 """
 
 import sqlite3

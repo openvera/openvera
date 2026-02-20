@@ -7,8 +7,8 @@ services:
     volumes:
       - ./data:/data
       - ${OPENVERA_FILES_DIR:-./data/files}:/data/files
-      - ./app:/vera/app
-      - ./scripts:/vera/scripts
+      - ./app:/openvera/app
+      - ./scripts:/openvera/scripts
     environment:
       - OPENVERA_ENV=dev
       - OPENVERA_BASE_DIR=/data

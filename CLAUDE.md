@@ -55,7 +55,7 @@ cd frontend && npm install && npm run dev
 cd frontend && npm install && npm run build
 
 # Run scripts inside container
-docker compose exec openvera python /vera/scripts/init_db.py
+docker compose exec openvera python /openvera/scripts/init_db.py
 
 # Syntax check (Flask not installed locally)
 python3 -m py_compile app/routes/pages.py
