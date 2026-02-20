@@ -1,0 +1,76 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+venv/
+.venv/
+env/
+
+# Database
+*.db
+
+# Logs
+*.log
+/tmp/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Sensitive data - NEVER commit
+*.pdf
+*.csv
+
+# Inbox
+/inbox/
+inbox.json
+
+# Local config
+.env
+*.local
+*.pem
+
+# Flask
+instance/
+
+# Database journal files
+*.db-journal
+
+# JSON data files (contain company data)
+invoices.json
+manual_matches.json
+.email_state.json
+
+# Excel files (may contain sensitive data)
+*.xlsx
+*.xls
+
+# Accountant reports folder
+/rapporter-byra/
+
+# Backup files
+*.bak
+*.backup*
+
+# Database dumps (may contain sensitive data)
+*.gz
+
+# Docker data volume
+data/
+
+# Tailwind CSS build output
+app/static/css/
+
+# Frontend build output
+frontend/dist/
+frontend/node_modules/
+
+# Chrome DevTools MCP (local dev)
+.mcp.json

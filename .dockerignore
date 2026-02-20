@@ -1,0 +1,15 @@
+.git
+.gitignore
+.claude
+.env
+.env.example
+data/
+*.gz
+*.db
+*.db-journal
+__pycache__
+*.pyc
+.DS_Store
+docker-compose.yml
+Dockerfile
+setup.sh
