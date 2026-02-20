@@ -4,20 +4,20 @@ import { Link as LinkIcon, Pencil, Plus, Unlink } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import {
+  ConfirmDialog,
+  EmptyState,
+  FormModal,
   addPartyRelation,
   createParty,
   getBasAccounts,
   getCompanyParties,
   getParties,
+  label,
   removePartyRelation,
   updateParty,
-} from '../api/parties'
-import ConfirmDialog from '../components/ConfirmDialog'
-import EmptyState from '../components/EmptyState'
-import FormModal from '../components/FormModal'
-import { useCompany } from '../hooks/useCompany'
-import { label } from '../labels'
-import type { Party } from '../types'
+  useCompany,
+  type Party,
+} from 'openvera'
 
 const entityBadge: Record<string, string> = {
   business: 'badge-primary',

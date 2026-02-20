@@ -1,13 +1,18 @@
 import { ArrowRight, CheckCircle, ClipboardCheck, PartyPopper, XCircle } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { getDocuments, reviewDocument } from '../api/documents'
-import { createMatch, getMatches, unmatch } from '../api/matches'
-import AmountCell from '../components/AmountCell'
-import DateCell from '../components/DateCell'
-import EmptyState from '../components/EmptyState'
-import { useCompany } from '../hooks/useCompany'
-import { label } from '../labels'
+import {
+  AmountCell,
+  DateCell,
+  EmptyState,
+  createMatch,
+  getDocuments,
+  getMatches,
+  label,
+  reviewDocument,
+  unmatch,
+  useCompany,
+} from 'openvera'
 
 export default function ReviewQueue() {
   const { selected } = useCompany()

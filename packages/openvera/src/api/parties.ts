@@ -1,4 +1,4 @@
-import type { BasAccount, Party, PartyRelation } from '../types'
+import type { Party, PartyRelation } from '../types'
 
 import { api } from './client'
 
@@ -77,5 +77,3 @@ export const removePartyRelation = (data: {
     method: 'DELETE',
     body: JSON.stringify(data),
   })
-
-export const getBasAccounts = () => api<BasAccount[]>('/api/bas-accounts')

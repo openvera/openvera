@@ -4,19 +4,19 @@ import { ArrowLeft, CheckCircle, Link as LinkIcon, Pencil, RefreshCw, Trash2, XC
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import {
+  AmountCell,
+  ConfirmDialog,
+  DateCell,
+  DocumentDetailModal,
+  FormModal,
   deleteTransaction,
   getBasAccounts,
   getTransaction,
   getTransactionMatches,
+  label,
   updateTransaction,
-} from '../api/transactions'
-import AmountCell from '../components/AmountCell'
-import ConfirmDialog from '../components/ConfirmDialog'
-import DateCell from '../components/DateCell'
-import DocumentDetailModal from '../components/DocumentDetailModal'
-import FormModal from '../components/FormModal'
-import { label } from '../labels'
-import type { Transaction } from '../types'
+  type Transaction,
+} from 'openvera'
 
 export default function TransactionDetail() {
   const { transactionId } = useParams()

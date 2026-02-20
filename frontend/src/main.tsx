@@ -4,8 +4,9 @@ import { BrowserRouter } from 'react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Theme } from '@radix-ui/themes'
 
+import { CompanyProvider, OpenVeraProvider } from 'openvera'
+
 import App from './App'
-import { CompanyProvider } from './hooks/useCompany'
 
 import './index.css'
 
@@ -23,9 +24,11 @@ createRoot(document.getElementById('root')!).render(
     <QueryClientProvider client={queryClient}>
       <Theme>
         <BrowserRouter>
-          <CompanyProvider>
-            <App />
-          </CompanyProvider>
+          <OpenVeraProvider>
+            <CompanyProvider>
+              <App />
+            </CompanyProvider>
+          </OpenVeraProvider>
         </BrowserRouter>
       </Theme>
     </QueryClientProvider>

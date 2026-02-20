@@ -5,21 +5,22 @@ import { ArrowLeft, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import {
+  AmountCell,
+  ConfirmDialog,
+  FormModal,
   addPartyRelation,
   deleteParty,
   getBasAccounts,
+  getCompanies,
   getParty,
   getPartyRelations,
   getPartyTransactions,
+  label,
   removePartyRelation,
   updateParty,
-} from '../api/parties'
-import { getCompanies } from '../api/companies'
-import AmountCell from '../components/AmountCell'
-import ConfirmDialog from '../components/ConfirmDialog'
-import FormModal from '../components/FormModal'
-import { label } from '../labels'
-import type { Party, PartyRelation } from '../types'
+  type Party,
+  type PartyRelation,
+} from 'openvera'
 
 const entityBadge: Record<string, string> = {
   business: 'badge-primary',

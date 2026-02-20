@@ -1,3 +1,5 @@
+import { getBaseUrl } from '../config'
+
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -9,7 +11,7 @@ export class ApiError extends Error {
 }
 
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(path, {
+  const res = await fetch(`${getBaseUrl()}${path}`, {
     headers: {
       'Content-Type': 'application/json',
       ...init?.headers,

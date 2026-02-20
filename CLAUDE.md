@@ -8,7 +8,8 @@ Open-source Swedish bookkeeping system (bokföring). Flask backend, React fronte
 - `app/app.py` — Flask setup, CSRF, blueprint registration
 - `app/db.py` — `get_db()` context manager + all query helpers
 - `app/routes/` — one blueprint per domain (`pages`, `api_documents`, `api_transactions`, `api_parties`, `api_companies`)
-- `frontend/` — React + TypeScript + Tailwind CSS + @swedev/ui
+- `packages/openvera/` — Reusable React components, API client, types, and hooks (npm package, not published)
+- `frontend/` — OpenVera's own web app, imports from the `openvera` package
 - `scripts/` — CLI tools (schema init, CSV import, SIE4 export). Use `sys.path.insert` to import from `app/`.
 
 ## Key Patterns
@@ -19,6 +20,7 @@ Open-source Swedish bookkeeping system (bokföring). Flask backend, React fronte
 - **Blueprints**: 5 blueprints registered in `app.py`. Routes prefixed with `/api/` are JSON endpoints.
 - **Icons**: Lucide React (not FontAwesome). Import from `lucide-react`.
 - **UI Components**: @swedev/ui + Radix UI Themes. daisyUI-compatible CSS classes defined in `index.css`.
+- **Package**: Domain components and API client are in `packages/openvera/`. Configurable base URL via `OpenVeraProvider`. No hardcoded routing or global state assumptions.
 
 ## Database
 

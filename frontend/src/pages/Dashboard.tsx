@@ -13,8 +13,7 @@ import {
 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 
-import { getReport, getStats } from '../api/reports'
-import { useCompany } from '../hooks/useCompany'
+import { getReport, getStats, useCompany } from 'openvera'
 
 export default function Dashboard() {
   const { selected } = useCompany()

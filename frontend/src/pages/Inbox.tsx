@@ -13,13 +13,13 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import {
+  EmptyState,
   type FileTreeNode,
   deleteFileByPath,
   getFileTree,
   getPendingFiles,
   scanInbox,
-} from '../api/documents'
-import EmptyState from '../components/EmptyState'
+} from 'openvera'
 
 export default function Inbox() {
   const queryClient = useQueryClient()

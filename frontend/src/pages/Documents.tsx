@@ -4,22 +4,22 @@ import { Archive, Check, Search, Trash2 } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import {
+  AmountCell,
+  ConfirmDialog,
+  DateCell,
+  DocumentDetailModal,
+  EmptyState,
+  StatusBadge,
   archiveDocument,
   batchUpdateDocuments,
   deleteDocument,
   getDocuments,
+  getParties,
+  label,
   reviewDocument,
-} from '../api/documents'
-import AmountCell from '../components/AmountCell'
-import ConfirmDialog from '../components/ConfirmDialog'
-import DateCell from '../components/DateCell'
-import DocumentDetailModal from '../components/DocumentDetailModal'
-import EmptyState from '../components/EmptyState'
-import StatusBadge from '../components/StatusBadge'
-import { getParties } from '../api/parties'
-import { useCompany } from '../hooks/useCompany'
-import { label } from '../labels'
-import type { Document } from '../types'
+  useCompany,
+  type Document,
+} from 'openvera'
 
 type DocFilter = 'all' | 'matched' | 'unmatched' | 'reviewed' | 'unreviewed' | 'no_party' | 'archived'
 

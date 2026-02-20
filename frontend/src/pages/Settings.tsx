@@ -3,19 +3,20 @@ import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import {
+  ConfirmDialog,
+  EmptyState,
+  FormModal,
   createAccount,
   deleteAccount,
   deleteCompany,
   getAccounts,
+  label,
   updateAccount,
   updateCompany,
-} from '../api/companies'
-import ConfirmDialog from '../components/ConfirmDialog'
-import EmptyState from '../components/EmptyState'
-import FormModal from '../components/FormModal'
-import { useCompany } from '../hooks/useCompany'
-import { label } from '../labels'
-import type { Account, Company } from '../types'
+  useCompany,
+  type Account,
+  type Company,
+} from 'openvera'
 
 export default function Settings() {
   const { selected } = useCompany()

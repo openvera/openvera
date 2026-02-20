@@ -11,7 +11,7 @@ import {
   Users,
 } from 'lucide-react'
 
-import CompanySelector from './CompanySelector'
+import { CompanySelector } from 'openvera'
 
 const navItems: {
   to: string;

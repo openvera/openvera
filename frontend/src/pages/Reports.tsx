@@ -2,10 +2,7 @@ import { useState } from 'react'
 import { FileOutput } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 
-import { getReport, getVatReport, getSieExportUrl } from '../api/reports'
-import AmountCell from '../components/AmountCell'
-import EmptyState from '../components/EmptyState'
-import { useCompany } from '../hooks/useCompany'
+import { AmountCell, EmptyState, getReport, getSieExportUrl, getVatReport, useCompany } from 'openvera'
 
 export default function Reports() {
   const { selected } = useCompany()
