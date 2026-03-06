@@ -27,7 +27,27 @@ The setup script will:
 4. Build and start the Docker container
 5. Guide you through adding your first company
 
-## Common Commands
+## Development
+
+### Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/)
+- [Node.js](https://nodejs.org/) (v22+) — for frontend development
+- `@swedev/ui` — local dependency expected at `../ui` relative to the repo root (see `frontend/package.json`)
+
+### Frontend
+
+The frontend depends on two local packages: `packages/openvera` and `@swedev/ui` (outside the repo at `../ui`). Both must be available before `npm install` will succeed.
+
+```bash
+# Build the openvera package
+cd packages/openvera && npm install && npm run build && cd ../..
+
+# Start frontend dev server (with hot reload)
+cd frontend && npm install && npm run dev
+```
+
+### Docker
 
 ```bash
 docker compose up -d --build    # Rebuild and start
@@ -41,6 +61,8 @@ Run scripts inside the container:
 ```bash
 docker compose exec openvera python /openvera/scripts/<script>.py
 ```
+
+The Dockerfile requires a pre-built frontend (`cd frontend && npm run build`) because `@swedev/ui` can't resolve inside the Docker build context.
 
 ## Project Structure
 
@@ -58,18 +80,7 @@ data/             Local SQLite database (created by setup.sh)
 
 ## Configuration
 
-Copy `.env.example` to `.env` (done automatically by `setup.sh`).
-
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `SECRET_KEY` | random | Flask secret key |
-| `OPENVERA_BASE_DIR` | `./data` | Base path for database |
-| `OPENVERA_FILES_DIR` | `$OPENVERA_BASE_DIR/files` | Document file storage |
-| `OPENVERA_PORT` | `8888` | Application port |
-| `OPENVERA_ENV` | `prod` | Runtime mode (`dev` enables auto-reload) |
-| `ENABLE_BANKING_APP_ID` | — | Enable Banking integration |
-| `ENABLE_BANKING_PRIVATE_KEY_PATH` | — | Enable Banking private key |
-| `OPENVERA_ADMIN_TOKEN` | — | Auth token for admin endpoints |
+Copy `.env.example` to `.env` (done automatically by `setup.sh`). See `.env.example` for all available variables and descriptions.
 
 ## File Storage
 

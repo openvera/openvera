@@ -5,19 +5,18 @@ Open-source Swedish bookkeeping system (bokföring). Flask backend, React fronte
 ## Architecture
 
 - `app/config.py` — shared `BASE_DIR` (DB), `FILES_DIR` (documents), `DB_PATH` from env vars
-- `app/app.py` — Flask setup, CSRF, blueprint registration
+- `app/app.py` — Flask setup, blueprint registration
 - `app/db.py` — `get_db()` context manager + all query helpers
-- `app/routes/` — one blueprint per domain (`pages`, `api_documents`, `api_transactions`, `api_parties`, `api_companies`)
+- `app/routes/` — one blueprint per domain, registered in `app.py`
 - `packages/openvera/` — Reusable React components, API client, types, and hooks (npm package, not published)
 - `frontend/` — OpenVera's own web app, imports from the `openvera` package
-- `scripts/` — CLI tools (schema init, CSV import, SIE4 export). Use `sys.path.insert` to import from `app/`.
+- `scripts/` — CLI tools. Use `sys.path.insert` to import from `app/`.
 
 ## Key Patterns
 
 - **Imports**: `app/` is the working directory. All imports are bare (`from config import FILES_DIR`, `from db import get_db`). Scripts use `sys.path.insert` to add `app/` to path.
-- **CSRF**: Frontend `fetch()` auto-includes CSRF token on POST/PUT/DELETE.
 - **Database**: Always use `with get_db() as conn:` context manager. Returns `sqlite3.Row` objects. All query helpers are in `db.py`.
-- **Blueprints**: 5 blueprints registered in `app.py`. Routes prefixed with `/api/` are JSON endpoints.
+- **Blueprints**: Registered in `app.py`. Routes prefixed with `/api/` are JSON endpoints.
 - **Icons**: Lucide React (not FontAwesome). Import from `lucide-react`.
 - **UI Components**: @swedev/ui + Radix UI Themes. daisyUI-compatible CSS classes defined in `index.css`.
 - **Package**: Domain components and API client are in `packages/openvera/`. Configurable base URL via `OpenVeraProvider`. No hardcoded routing or global state assumptions.
@@ -32,9 +31,7 @@ companies → accounts → transactions ↔ matches ↔ documents ← files
                                                parties
 ```
 
-11 tables: `companies`, `accounts`, `transactions`, `files`, `documents`, `matches`, `transfers`, `parties`, `party_relations`, `bas_accounts`, `inbox`.
-
-Document extraction data is stored in `documents.extracted_json`.
+Schema defined in `scripts/init_db.py`. Document extraction data is stored in `documents.extracted_json`.
 
 ## Development
 
@@ -58,29 +55,12 @@ cd frontend && npm install && npm run build
 docker compose exec openvera python /openvera/scripts/init_db.py
 
 # Syntax check (Flask not installed locally)
-python3 -m py_compile app/routes/pages.py
+python3 -m py_compile app/routes/api_documents.py
 ```
 
 ## Environment Variables
 
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `OPENVERA_BASE_DIR` | `./data` | Base directory for database |
-| `OPENVERA_FILES_DIR` | `$OPENVERA_BASE_DIR/files` | Document file storage |
-| `SECRET_KEY` | random | Flask session secret (set in `.env`) |
-| `OPENVERA_PORT` | `8888` | Application port |
-| `OPENVERA_ENV` | `prod` | Runtime mode (`dev` enables auto-reload) |
-
-## Docker
-
-The Dockerfile requires a pre-built frontend. Build the frontend locally before building the Docker image:
-
-```bash
-cd frontend && npm install && npm run build
-docker compose up -d --build
-```
-
-This is because `@swedev/ui` is a local `file:` dependency that can't resolve inside the Docker build context.
+Defined in `app/config.py`. Defaults and descriptions in `.env.example`.
 
 ## Skills (Claude Code)
 

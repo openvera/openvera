@@ -12,19 +12,7 @@ Thank you for your interest in contributing to OpenVera!
 
 ## Development Setup
 
-```bash
-git clone https://github.com/openvera/openvera.git
-cd openvera
-./setup.sh
-```
-
-The frontend lives in `frontend/` and uses React + TypeScript + Tailwind CSS.
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
+See the [Development section in README.md](README.md#development) for prerequisites and setup instructions.
 
 ## Guidelines
 
