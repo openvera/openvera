@@ -7,6 +7,7 @@ import { CompanyProvider, OpenVeraProvider } from 'openvera'
 
 import App from './App'
 
+import '@radix-ui/themes/tokens.css'
 import './index.css'
 
 const queryClient = new QueryClient({
