@@ -1,4 +1,5 @@
 import { Link } from 'react-router'
+import { useQuery } from '@tanstack/react-query'
 import {
   ArrowLeftRight,
   ArrowRight,
@@ -11,8 +12,6 @@ import {
   Unlink,
   UserX,
 } from 'lucide-react'
-import { useQuery } from '@tanstack/react-query'
-
 import { getReport, getStats, useCompany } from 'openvera'
 
 export default function Dashboard() {

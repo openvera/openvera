@@ -1,21 +1,20 @@
 import { useRef, useState } from 'react'
-import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-
+import { Pencil, Plus, Trash2 } from 'lucide-react'
 import {
+  type Account,
+  type Company,
   ConfirmDialog,
-  EmptyState,
-  FormModal,
   createAccount,
   deleteAccount,
   deleteCompany,
+  EmptyState,
+  FormModal,
   getAccounts,
   label,
   updateAccount,
   updateCompany,
   useCompany,
-  type Account,
-  type Company,
 } from 'openvera'
 
 export default function Settings() {
@@ -49,8 +48,8 @@ export default function Settings() {
       slug,
       data,
     }: {
-      slug: string
-      data: Parameters<typeof updateCompany>[1]
+      slug: string;
+      data: Parameters<typeof updateCompany>[1];
     }) => updateCompany(slug, data),
     onSuccess: () => {
       setEditingCompany(false)
@@ -80,8 +79,8 @@ export default function Settings() {
       id,
       data,
     }: {
-      id: number
-      data: Parameters<typeof updateAccount>[1]
+      id: number;
+      data: Parameters<typeof updateAccount>[1];
     }) => updateAccount(id, data),
     onSuccess: () => {
       setEditAccount(null)
@@ -313,8 +312,8 @@ export default function Settings() {
 }
 
 interface FormActions {
-  submit: () => void
-  canSubmit: boolean
+  submit: () => void;
+  canSubmit: boolean;
 }
 
 function ModalFooter({
@@ -323,10 +322,10 @@ function ModalFooter({
   isPending,
   submitLabel,
 }: {
-  onCancel: () => void
-  onSubmit: () => void
-  isPending: boolean
-  submitLabel: string
+  onCancel: () => void;
+  onSubmit: () => void;
+  isPending: boolean;
+  submitLabel: string;
 }) {
   return (
     <>
@@ -351,13 +350,13 @@ function CompanyForm({
   onSave,
   onActionsReady,
 }: {
-  company?: Company
+  company?: Company;
   onSave: (data: {
-    name: string
-    org_number?: string
-    fiscal_year_start?: string
-  }) => void
-  onActionsReady: (actions: FormActions) => void
+    name: string;
+    org_number?: string;
+    fiscal_year_start?: string;
+  }) => void;
+  onActionsReady: (actions: FormActions) => void;
 }) {
   const [name, setName] = useState(company?.name ?? '')
   const [orgNumber, setOrgNumber] = useState(company?.org_number ?? '')
@@ -416,14 +415,14 @@ function AccountForm({
   onSave,
   onActionsReady,
 }: {
-  account?: Account
+  account?: Account;
   onSave: (data: {
-    name: string
-    account_number?: string
-    account_type?: string
-    currency?: string
-  }) => void
-  onActionsReady: (actions: FormActions) => void
+    name: string;
+    account_number?: string;
+    account_type?: string;
+    currency?: string;
+  }) => void;
+  onActionsReady: (actions: FormActions) => void;
 }) {
   const [name, setName] = useState(account?.name ?? '')
   const [accountNumber, setAccountNumber] = useState(

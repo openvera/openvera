@@ -1,11 +1,10 @@
-import { ArrowRight, CheckCircle, ClipboardCheck, PartyPopper, XCircle } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-
+import { ArrowRight, CheckCircle, ClipboardCheck, PartyPopper, XCircle } from 'lucide-react'
 import {
   AmountCell,
+  createMatch,
   DateCell,
   EmptyState,
-  createMatch,
   getDocuments,
   getMatches,
   label,
@@ -146,12 +145,12 @@ export default function ReviewQueue() {
                       <p className="tabular-nums text-base-content/60">
                         <DateCell date={match.doc_date} />
                       </p>
-                      {match.doc_amount != null && (
+                      {match.doc_amount !== null && (
                         <p className="tabular-nums">
                           <AmountCell amount={match.doc_amount} currency={match.doc_currency ?? undefined} />
                         </p>
                       )}
-                      {match.doc_net_amount != null && match.doc_vat_amount != null && (
+                      {match.doc_net_amount !== null && match.doc_vat_amount !== null && (
                         <p className="text-xs text-base-content/50 tabular-nums">
                           netto {Math.abs(match.doc_net_amount).toLocaleString('sv-SE', { minimumFractionDigits: 2 })}
                           {' + moms '}

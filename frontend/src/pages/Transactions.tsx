@@ -1,19 +1,18 @@
 import { useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
-import { RefreshCw, Search } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-
+import { RefreshCw, Search } from 'lucide-react'
 import {
+  type Account,
   AmountCell,
+  batchUpdateTransactions,
   DateCell,
   EmptyState,
-  StatusBadge,
-  batchUpdateTransactions,
   getBasAccounts,
   getCompany,
-  useCompany,
-  type Account,
+  StatusBadge,
   type Transaction,
+  useCompany,
 } from 'openvera'
 
 type MatchFilter = 'all' | 'matched' | 'unmatched'
@@ -55,7 +54,7 @@ export default function Transactions() {
     queryFn: getBasAccounts,
   })
 
-  const accounts: Account[] = data?.accounts ?? []
+  const accounts: Account[] = useMemo(() => data?.accounts ?? [], [data?.accounts])
 
   const allTransactions = useMemo(() => {
     const txns: (Transaction & { account_name: string })[] = []
@@ -189,73 +188,73 @@ export default function Transactions() {
 
       {/* Batch edit bar */}
       <div className={`bg-base-200 rounded-xl p-3 flex flex-wrap items-center gap-3 ${selectedIds.size === 0 ? 'opacity-40 pointer-events-none' : ''}`}>
-          <span className="text-sm font-medium">
-            {selectedIds.size} markerade
-          </span>
-          <select
-            className="select select-bordered select-sm w-auto"
-            value={batchCode}
-            onChange={(e) => setBatchCode(e.target.value)}
-          >
-            <option value="">Kontokod...</option>
-            {basAccounts.map((ba) => (
-              <option key={ba.code} value={ba.code}>
-                {ba.code} {ba.name}
-              </option>
-            ))}
-          </select>
-          <select
-            className="select select-bordered select-sm w-auto"
-            value={batchCategory}
-            onChange={(e) => setBatchCategory(e.target.value)}
-          >
-            <option value="">Kategori...</option>
-            <option value="expense">Utgift</option>
-            <option value="income">Intäkt</option>
-            <option value="transfer">Överföring</option>
-            <option value="salary">Lön</option>
-          </select>
-          <select
-            className="select select-bordered select-sm w-auto"
-            value={batchTransfer}
-            onChange={(e) => setBatchTransfer(e.target.value)}
-          >
-            <option value="">Överföring...</option>
-            <option value="yes">Intern överföring: Ja</option>
-            <option value="no">Intern överföring: Nej</option>
-          </select>
-          <select
-            className="select select-bordered select-sm w-auto"
-            value={batchNeedsReceipt}
-            onChange={(e) => setBatchNeedsReceipt(e.target.value)}
-          >
-            <option value="">Underlag...</option>
-            <option value="yes">Behöver underlag: Ja</option>
-            <option value="no">Behöver underlag: Nej</option>
-          </select>
-          <span className="flex-1" />
-          <button
-            className="btn btn-primary btn-sm"
-            onClick={handleBatchSave}
-            disabled={batchMutation.isPending || !hasBatchChanges}
-          >
-            {batchMutation.isPending
-              ? <span className="loading loading-spinner loading-xs" />
-              : 'Spara'}
-          </button>
-          <button
-            className="btn btn-ghost btn-sm"
-            onClick={() => {
-              setSelectedIds(new Set())
-              setBatchCode('')
-              setBatchCategory('')
-              setBatchTransfer('')
-              setBatchNeedsReceipt('')
-            }}
-          >
-            Avbryt
-          </button>
-        </div>
+        <span className="text-sm font-medium">
+          {selectedIds.size} markerade
+        </span>
+        <select
+          className="select select-bordered select-sm w-auto"
+          value={batchCode}
+          onChange={(e) => setBatchCode(e.target.value)}
+        >
+          <option value="">Kontokod...</option>
+          {basAccounts.map((ba) => (
+            <option key={ba.code} value={ba.code}>
+              {ba.code} {ba.name}
+            </option>
+          ))}
+        </select>
+        <select
+          className="select select-bordered select-sm w-auto"
+          value={batchCategory}
+          onChange={(e) => setBatchCategory(e.target.value)}
+        >
+          <option value="">Kategori...</option>
+          <option value="expense">Utgift</option>
+          <option value="income">Intäkt</option>
+          <option value="transfer">Överföring</option>
+          <option value="salary">Lön</option>
+        </select>
+        <select
+          className="select select-bordered select-sm w-auto"
+          value={batchTransfer}
+          onChange={(e) => setBatchTransfer(e.target.value)}
+        >
+          <option value="">Överföring...</option>
+          <option value="yes">Intern överföring: Ja</option>
+          <option value="no">Intern överföring: Nej</option>
+        </select>
+        <select
+          className="select select-bordered select-sm w-auto"
+          value={batchNeedsReceipt}
+          onChange={(e) => setBatchNeedsReceipt(e.target.value)}
+        >
+          <option value="">Underlag...</option>
+          <option value="yes">Behöver underlag: Ja</option>
+          <option value="no">Behöver underlag: Nej</option>
+        </select>
+        <span className="flex-1" />
+        <button
+          className="btn btn-primary btn-sm"
+          onClick={handleBatchSave}
+          disabled={batchMutation.isPending || !hasBatchChanges}
+        >
+          {batchMutation.isPending
+            ? <span className="loading loading-spinner loading-xs" />
+            : 'Spara'}
+        </button>
+        <button
+          className="btn btn-ghost btn-sm"
+          onClick={() => {
+            setSelectedIds(new Set())
+            setBatchCode('')
+            setBatchCategory('')
+            setBatchTransfer('')
+            setBatchNeedsReceipt('')
+          }}
+        >
+          Avbryt
+        </button>
+      </div>
 
       {filtered.length === 0
         ? (

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ChevronDown,
   ChevronRight,
@@ -10,12 +11,10 @@ import {
   Trash2,
   XCircle,
 } from 'lucide-react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-
 import {
+  deleteFileByPath,
   EmptyState,
   type FileTreeNode,
-  deleteFileByPath,
   getFileTree,
   getPendingFiles,
   scanInbox,
@@ -147,7 +146,7 @@ export default function Inbox() {
                               {f.mime_type?.split('/').pop() ?? '—'}
                             </td>
                             <td className="text-right tabular-nums">
-                              {f.file_size != null ? formatSize(f.file_size) : '—'}
+                              {f.file_size !== null ? formatSize(f.file_size) : '—'}
                             </td>
                             <td className="tabular-nums">
                               {f.created_at?.split('T')[0] ?? '—'}
@@ -251,7 +250,7 @@ function TreeNode({ node, depth, showDuplicates, onDelete }: { node: FileTreeNod
       >
         {node.name}
       </a>
-      {node.size != null && (
+      {node.size !== undefined && (
         <span className="text-base-content/30 text-xs">
           {formatSize(node.size)}
         </span>
@@ -264,7 +263,8 @@ function TreeNode({ node, depth, showDuplicates, onDelete }: { node: FileTreeNod
             target="_blank"
             rel="noopener noreferrer"
             className="text-base-content/30 text-xs hover:underline"
-          >= {node.duplicate_of!.split('/').pop()}</a>
+          >= {node.duplicate_of!.split('/').pop()}
+          </a>
         </>
       )}
       {!node.in_db && !node.is_duplicate && (

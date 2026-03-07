@@ -10,7 +10,6 @@ import {
   Settings,
   Users,
 } from 'lucide-react'
-
 import { CompanySelector } from 'openvera'
 
 const navItems: {

@@ -1,24 +1,23 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
-import { Archive, Check, Search, Trash2 } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-
+import { Archive, Check, Search, Trash2 } from 'lucide-react'
 import {
   AmountCell,
-  ConfirmDialog,
-  DateCell,
-  DocumentDetailModal,
-  EmptyState,
-  StatusBadge,
   archiveDocument,
   batchUpdateDocuments,
+  ConfirmDialog,
+  DateCell,
   deleteDocument,
+  type Document,
+  DocumentDetailModal,
+  EmptyState,
   getDocuments,
   getParties,
   label,
   reviewDocument,
+  StatusBadge,
   useCompany,
-  type Document,
 } from 'openvera'
 
 type DocFilter = 'all' | 'matched' | 'unmatched' | 'reviewed' | 'unreviewed' | 'no_party' | 'archived'
@@ -52,8 +51,10 @@ export default function Documents() {
         return next
       }, { replace: true })
     }, 300)
-    return () => { if (searchTimer.current) clearTimeout(searchTimer.current) }
-  }, [search])
+    return () => {
+      if (searchTimer.current) clearTimeout(searchTimer.current)
+    }
+  }, [search, setSearchParams])
   const detailId = searchParams.get('doc') ? Number(searchParams.get('doc')) : null
   const [deleteTarget, setDeleteTarget] = useState<Document | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
@@ -75,7 +76,7 @@ export default function Documents() {
   const setDetailId = (id: number | null) => {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev)
-      if (id != null) next.set('doc', String(id))
+      if (id !== null) next.set('doc', String(id))
       else next.delete('doc')
       return next
     })
@@ -157,10 +158,10 @@ export default function Documents() {
     return documents
       .filter((doc) => {
         if (typeFilter !== 'all' && doc.doc_type !== typeFilter) return false
-        if (q && !(doc.filename ?? '').toLowerCase().includes(q)
-          && !(doc.party_name ?? '').toLowerCase().includes(q)
-          && !(doc.invoice_number ?? '').toLowerCase().includes(q)
-          && !(doc.ocr_number ?? '').toLowerCase().includes(q))
+        if (q && !(doc.filename ?? '').toLowerCase().includes(q) &&
+          !(doc.party_name ?? '').toLowerCase().includes(q) &&
+          !(doc.invoice_number ?? '').toLowerCase().includes(q) &&
+          !(doc.ocr_number ?? '').toLowerCase().includes(q))
           return false
         switch (filter) {
           case 'matched':
@@ -426,21 +427,21 @@ export default function Documents() {
                           />
                         </td>
                         <td className="text-right tabular-nums text-nowrap">
-                          {doc.currency && doc.currency !== 'SEK' && doc.matched_txn_amount != null && doc.amount
+                          {doc.currency && doc.currency !== 'SEK' && doc.matched_txn_amount !== null && doc.amount
                             ? (Math.abs(doc.matched_txn_amount) / Math.abs(doc.amount)).toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                             : ''}
                         </td>
                         <td className="text-right tabular-nums text-nowrap">
-                          {doc.currency && doc.currency !== 'SEK' && doc.matched_txn_amount != null
+                          {doc.currency && doc.currency !== 'SEK' && doc.matched_txn_amount !== null
                             ? `${Math.abs(doc.matched_txn_amount).toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kr`
                             : ''}
                         </td>
                         <td className="text-right tabular-nums text-nowrap">
-                          {doc.vat_amount != null && doc.vat_amount !== 0 && (
+                          {doc.vat_amount !== null && doc.vat_amount !== 0 && (
                             <span>
                               {Math.abs(doc.vat_amount).toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               {(!doc.currency || doc.currency === 'SEK') && ' kr'}
-                              {doc.net_amount != null && doc.net_amount !== 0 && (
+                              {doc.net_amount !== null && doc.net_amount !== 0 && (
                                 <span className="text-base-content/40 ml-1">
                                   {Math.round((Math.abs(doc.vat_amount) / Math.abs(doc.net_amount)) * 100)}%
                                 </span>

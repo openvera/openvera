@@ -1,0 +1,25 @@
+{
+  "projects": {
+    "OpenVera MVP": {
+      "number": 1,
+      "id": "PVT_kwDOD40e384BRDw6",
+      "assignees_field_id": "PVTF_lADOD40e384BRDw6zg-_6bA",
+      "status_field_id": "PVTSSF_lADOD40e384BRDw6zg-_6bE",
+      "status_options": {
+        "New": "62ec4840",
+        "Todo": "f75ad846",
+        "In Progress": "47fc9ee4",
+        "In Review": "ac1ebb76",
+        "Done": "98236657"
+      },
+      "labels_field_id": "PVTF_lADOD40e384BRDw6zg-_6bI",
+      "linked_pull_requests_field_id": "PVTF_lADOD40e384BRDw6zg-_6bM",
+      "milestone_field_id": "PVTF_lADOD40e384BRDw6zg-_6bQ",
+      "repository_field_id": "PVTF_lADOD40e384BRDw6zg-_6bU",
+      "reviewers_field_id": "PVTF_lADOD40e384BRDw6zg-_6bc",
+      "parent_issue_field_id": "PVTF_lADOD40e384BRDw6zg-_6bg",
+      "sub-issues_progress_field_id": "PVTF_lADOD40e384BRDw6zg-_6bk",
+      "active": true
+    }
+  }
+}

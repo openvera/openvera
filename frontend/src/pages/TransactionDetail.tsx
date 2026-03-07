@@ -1,21 +1,20 @@
 import { useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
-import { ArrowLeft, CheckCircle, Link as LinkIcon, Pencil, RefreshCw, Trash2, XCircle } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-
+import { ArrowLeft, CheckCircle, Link as LinkIcon, Pencil, RefreshCw, Trash2, XCircle } from 'lucide-react'
 import {
   AmountCell,
   ConfirmDialog,
   DateCell,
+  deleteTransaction,
   DocumentDetailModal,
   FormModal,
-  deleteTransaction,
   getBasAccounts,
   getTransaction,
   getTransactionMatches,
   label,
-  updateTransaction,
   type Transaction,
+  updateTransaction,
 } from 'openvera'
 
 export default function TransactionDetail() {
@@ -75,27 +74,35 @@ export default function TransactionDetail() {
 
   const allReviewed = matches.length > 0 && matches.every((m) => m.reviewed_at)
 
-  const statusBadge = txn.is_internal_transfer ? (
-    <span className="badge badge-ghost badge-sm gap-1">
-      <RefreshCw className="w-3 h-3" />
-      Överföring
-    </span>
-  ) : txn.is_matched && allReviewed ? (
-    <span className="badge badge-success badge-sm gap-1">
-      <CheckCircle className="w-3 h-3" />
-      Matchad
-    </span>
-  ) : txn.is_matched ? (
-    <span className="badge badge-info badge-sm gap-1">
-      <LinkIcon className="w-3 h-3" />
-      Matchad{matches[0]?.confidence ? ` ${matches[0].confidence}%` : ''}
-    </span>
-  ) : txn.needs_receipt === 0 ? null : (
-    <span className="badge badge-error badge-sm gap-1">
-      <XCircle className="w-3 h-3" />
-      Ej matchad
-    </span>
-  )
+  const statusBadge = txn.is_internal_transfer
+    ? (
+        <span className="badge badge-ghost badge-sm gap-1">
+          <RefreshCw className="w-3 h-3" />
+          Överföring
+        </span>
+      )
+    : txn.is_matched && allReviewed
+      ? (
+          <span className="badge badge-success badge-sm gap-1">
+            <CheckCircle className="w-3 h-3" />
+            Matchad
+          </span>
+        )
+      : txn.is_matched
+        ? (
+            <span className="badge badge-info badge-sm gap-1">
+              <LinkIcon className="w-3 h-3" />
+              Matchad{matches[0]?.confidence ? ` ${matches[0].confidence}%` : ''}
+            </span>
+          )
+        : txn.needs_receipt === 0
+          ? null
+          : (
+              <span className="badge badge-error badge-sm gap-1">
+                <XCircle className="w-3 h-3" />
+                Ej matchad
+              </span>
+            )
 
   return (
     <div className="space-y-6">
@@ -154,30 +161,34 @@ export default function TransactionDetail() {
 
             <dt className="text-base-content/50">Konto</dt>
             <dd>
-              {txn.account_name ? (
-                <Link
-                  to={`/transactions?account=${txn.account_id}`}
-                  className="link link-hover link-primary text-sm"
-                >
-                  {txn.account_name}
-                </Link>
-              ) : (
-                '—'
-              )}
+              {txn.account_name
+                ? (
+                    <Link
+                      to={`/transactions?account=${txn.account_id}`}
+                      className="link link-hover link-primary text-sm"
+                    >
+                      {txn.account_name}
+                    </Link>
+                  )
+                : (
+                    '—'
+                  )}
             </dd>
 
             <dt className="text-base-content/50">Företag</dt>
             <dd>
-              {txn.company_name ? (
-                <Link
-                  to={`/settings?company=${txn.company_slug}`}
-                  className="link link-hover link-primary text-sm"
-                >
-                  {txn.company_name}
-                </Link>
-              ) : (
-                '—'
-              )}
+              {txn.company_name
+                ? (
+                    <Link
+                      to={`/settings?company=${txn.company_slug}`}
+                      className="link link-hover link-primary text-sm"
+                    >
+                      {txn.company_name}
+                    </Link>
+                  )
+                : (
+                    '—'
+                  )}
             </dd>
 
             <dt className="text-base-content/50">Kontokod</dt>
@@ -206,65 +217,71 @@ export default function TransactionDetail() {
         </div>
 
         {/* Matched documents — hide when empty and no documentation needed */}
-        {(matches.length > 0 || txn.needs_receipt !== 0) && <div className="bg-base-100 rounded-xl shadow-sm p-5 space-y-4 self-start">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-base-content/50">
-            Matchade dokument
-            {matches.length > 0 && (
-              <span className="badge badge-sm badge-ghost ml-2">
-                {matches.length}
-              </span>
-            )}
-          </h2>
-          {matches.length === 0 ? (
-            <p className="text-sm text-base-content/40">Inga matchade dokument</p>
-          ) : (
-            <div className="space-y-3">
-              {matches.map((m) => (
-                <div
-                  key={m.id}
-                  className="rounded-lg border border-base-200 p-4 hover:bg-base-200/30 cursor-pointer transition-colors"
-                  onClick={() => setDetailDocId(m.id)}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium">{m.party_name || '—'}</span>
-                    <span className="badge badge-ghost badge-sm">
-                      {label.docType(m.doc_type)}
-                    </span>
+        {(matches.length > 0 || txn.needs_receipt !== 0) && (
+          <div className="bg-base-100 rounded-xl shadow-sm p-5 space-y-4 self-start">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-base-content/50">
+              Matchade dokument
+              {matches.length > 0 && (
+                <span className="badge badge-sm badge-ghost ml-2">
+                  {matches.length}
+                </span>
+              )}
+            </h2>
+            {matches.length === 0
+              ? (
+                  <p className="text-sm text-base-content/40">Inga matchade dokument</p>
+                )
+              : (
+                  <div className="space-y-3">
+                    {matches.map((m) => (
+                      <div
+                        key={m.id}
+                        className="rounded-lg border border-base-200 p-4 hover:bg-base-200/30 cursor-pointer transition-colors"
+                        onClick={() => setDetailDocId(m.id)}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium">{m.party_name || '—'}</span>
+                          <span className="badge badge-ghost badge-sm">
+                            {label.docType(m.doc_type)}
+                          </span>
+                        </div>
+                        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+                          <dt className="text-base-content/50">Belopp</dt>
+                          <dd className="tabular-nums">
+                            {m.amount !== null
+                              ? (
+                                  <AmountCell
+                                    amount={m.amount}
+                                    currency={m.currency ?? undefined}
+                                  />
+                                )
+                              : (
+                                  '—'
+                                )}
+                          </dd>
+                          {m.net_amount !== null && m.vat_amount !== null && (
+                            <>
+                              <dt className="text-base-content/50">Netto</dt>
+                              <dd className="tabular-nums">
+                                {Number(m.net_amount).toLocaleString('sv-SE', { minimumFractionDigits: 2 })} {m.currency ?? 'SEK'}
+                              </dd>
+                              <dt className="text-base-content/50">Moms</dt>
+                              <dd className="tabular-nums">
+                                {Number(m.vat_amount).toLocaleString('sv-SE', { minimumFractionDigits: 2 })} {m.currency ?? 'SEK'}
+                              </dd>
+                            </>
+                          )}
+                          <dt className="text-base-content/50">Datum</dt>
+                          <dd className="tabular-nums">
+                            {m.doc_date ? <DateCell date={m.doc_date} /> : '—'}
+                          </dd>
+                        </dl>
+                      </div>
+                    ))}
                   </div>
-                  <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
-                    <dt className="text-base-content/50">Belopp</dt>
-                    <dd className="tabular-nums">
-                      {m.amount != null ? (
-                        <AmountCell
-                          amount={m.amount}
-                          currency={m.currency ?? undefined}
-                        />
-                      ) : (
-                        '—'
-                      )}
-                    </dd>
-                    {m.net_amount != null && m.vat_amount != null && (
-                      <>
-                        <dt className="text-base-content/50">Netto</dt>
-                        <dd className="tabular-nums">
-                          {Number(m.net_amount).toLocaleString('sv-SE', { minimumFractionDigits: 2 })} {m.currency ?? 'SEK'}
-                        </dd>
-                        <dt className="text-base-content/50">Moms</dt>
-                        <dd className="tabular-nums">
-                          {Number(m.vat_amount).toLocaleString('sv-SE', { minimumFractionDigits: 2 })} {m.currency ?? 'SEK'}
-                        </dd>
-                      </>
-                    )}
-                    <dt className="text-base-content/50">Datum</dt>
-                    <dd className="tabular-nums">
-                      {m.doc_date ? <DateCell date={m.doc_date} /> : '—'}
-                    </dd>
-                  </dl>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>}
+                )}
+          </div>
+        )}
       </div>
 
       {/* Edit modal */}
@@ -285,11 +302,13 @@ export default function TransactionDetail() {
               onClick={() => editActions.current?.submit()}
               disabled={updateMutation.isPending}
             >
-              {updateMutation.isPending ? (
-                <span className="loading loading-spinner loading-xs" />
-              ) : (
-                'Spara'
-              )}
+              {updateMutation.isPending
+                ? (
+                    <span className="loading loading-spinner loading-xs" />
+                  )
+                : (
+                    'Spara'
+                  )}
             </button>
           </>
         }
@@ -327,9 +346,9 @@ function TransactionForm({
   onSave,
   onActionsReady,
 }: {
-  txn: Transaction
-  onSave: (data: Parameters<typeof updateTransaction>[1]) => void
-  onActionsReady: (actions: { submit: () => void; canSubmit: boolean }) => void
+  txn: Transaction;
+  onSave: (data: Parameters<typeof updateTransaction>[1]) => void;
+  onActionsReady: (actions: { submit: () => void; canSubmit: boolean }) => void;
 }) {
   const { data: basAccounts = [] } = useQuery({
     queryKey: ['bas-accounts'],

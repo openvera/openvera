@@ -1,25 +1,24 @@
+import type { MouseEvent } from 'react'
 import { useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
-import type { MouseEvent } from 'react'
-import { ArrowLeft, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-
+import { ArrowLeft, Pencil, Plus, Trash2 } from 'lucide-react'
 import {
+  addPartyRelation,
   AmountCell,
   ConfirmDialog,
-  FormModal,
-  addPartyRelation,
   deleteParty,
+  FormModal,
   getBasAccounts,
   getCompanies,
   getParty,
   getPartyRelations,
   getPartyTransactions,
   label,
-  removePartyRelation,
-  updateParty,
   type Party,
   type PartyRelation,
+  removePartyRelation,
+  updateParty,
 } from 'openvera'
 
 const entityBadge: Record<string, string> = {
@@ -414,9 +413,9 @@ function AddRelationForm({
   onAdd,
   isPending,
 }: {
-  companies: { id: number; name: string }[]
-  onAdd: (companyId: number, relationship: string) => void
-  isPending: boolean
+  companies: { id: number; name: string }[];
+  onAdd: (companyId: number, relationship: string) => void;
+  isPending: boolean;
 }) {
   const [relationship, setRelationship] = useState('vendor')
 
@@ -467,15 +466,15 @@ function PartyForm({
   onSave,
   onActionsReady,
 }: {
-  party: Party
-  basAccounts: { code: string; name: string }[]
+  party: Party;
+  basAccounts: { code: string; name: string }[];
   onSave: (data: {
-    name: string
-    entity_type: string
-    patterns: string
-    default_code?: string
-  }) => void
-  onActionsReady: (actions: { submit: () => void; canSubmit: boolean }) => void
+    name: string;
+    entity_type: string;
+    patterns: string;
+    default_code?: string;
+  }) => void;
+  onActionsReady: (actions: { submit: () => void; canSubmit: boolean }) => void;
 }) {
   const [name, setName] = useState(party.name)
   const [entityType, setEntityType] = useState(party.entity_type)

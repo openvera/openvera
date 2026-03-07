@@ -1,22 +1,21 @@
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { Link as LinkIcon, Pencil, Plus, Unlink } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-
+import { Link as LinkIcon, Pencil, Plus, Unlink } from 'lucide-react'
 import {
+  addPartyRelation,
   ConfirmDialog,
+  createParty,
   EmptyState,
   FormModal,
-  addPartyRelation,
-  createParty,
   getBasAccounts,
   getCompanyParties,
   getParties,
   label,
+  type Party,
   removePartyRelation,
   updateParty,
   useCompany,
-  type Party,
 } from 'openvera'
 
 const entityBadge: Record<string, string> = {
