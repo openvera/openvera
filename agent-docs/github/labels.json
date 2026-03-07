@@ -1,0 +1,15 @@
+{
+  "last_synced": "2026-03-07T00:00:00Z",
+  "repository": "openvera/openvera",
+  "labels": [
+    { "name": "dependencies", "color": "d4c5f9", "description": "Dependency updates and management" },
+    { "name": "documentation", "color": "0075ca", "description": "Improvements or additions to documentation" },
+    { "name": "enhancement", "color": "a2eeef", "description": "New feature or request" },
+    { "name": "plan exists", "color": "0e8a16", "description": "A plan document exists for this issue" },
+    { "name": "question", "color": "d876e3", "description": "Further information is requested" },
+    { "name": "refactoring", "color": "49255f", "description": "Code refactoring" },
+    { "name": "reviewed", "color": "ffffff", "description": "Issue has a PR reviewed at least once." },
+    { "name": "testing", "color": "b4ab27", "description": "Testing-related work" },
+    { "name": "wontfix", "color": "ffffff", "description": "This will not be worked on" }
+  ]
+}
