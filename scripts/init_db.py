@@ -49,6 +49,8 @@ CREATE TABLE IF NOT EXISTS transactions (
     linked_transfer_id INTEGER,  -- Links to matching transaction in other account
     external_id TEXT,  -- Provider-native transaction ID (e.g. Enable Banking)
     import_fingerprint TEXT,  -- Hash of date+amount+reference+balance for CSV dedup
+    accounting_code TEXT,  -- BAS account code (e.g. '5010')
+    needs_receipt BOOLEAN,  -- Whether this transaction needs a receipt
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (account_id) REFERENCES accounts(id),
@@ -86,6 +88,11 @@ CREATE TABLE IF NOT EXISTS documents (
     net_amount_sek REAL,  -- Net amount in SEK (for foreign-currency documents)
     vat_amount_sek REAL,  -- VAT amount in SEK (for momsdeklaration)
     vat_breakdown_json TEXT,  -- JSON array: [{"rate": 25, "net": 2000.00, "vat": 500.00}, ...]
+    reviewed_at TIMESTAMP,  -- When the document was reviewed/verified
+    match_attempted_at TIMESTAMP,  -- When auto-matching was last attempted
+    match_feedback TEXT,  -- Feedback on match suggestions
+    related_document_id INTEGER,  -- Links to a related document (e.g. credit note)
+    archived BOOLEAN DEFAULT 0,  -- Whether the document is archived
     party_id INTEGER,
     extracted_json TEXT,
     notes TEXT,

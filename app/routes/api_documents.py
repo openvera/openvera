@@ -38,11 +38,10 @@ def api_document_details():
             cursor.execute("""
                 SELECT d.*, f.filepath, f.filename, f.content_hash,
                        c.name as company_name, c.slug as company_slug,
-                       p.name as person_name, pa.name as party_name, pa.id as party_id_ref
+                       pa.name as party_name, pa.id as party_id_ref
                 FROM documents d
                 JOIN companies c ON d.company_id = c.id
                 LEFT JOIN files f ON d.file_id = f.id
-                LEFT JOIN persons p ON d.person_id = p.id
                 LEFT JOIN parties pa ON d.party_id = pa.id
                 WHERE d.id = ?
             """, (doc_id,))
@@ -50,11 +49,10 @@ def api_document_details():
             cursor.execute("""
                 SELECT d.*, f.filepath, f.filename, f.content_hash,
                        c.name as company_name, c.slug as company_slug,
-                       p.name as person_name, pa.name as party_name, pa.id as party_id_ref
+                       pa.name as party_name, pa.id as party_id_ref
                 FROM documents d
                 JOIN companies c ON d.company_id = c.id
                 LEFT JOIN files f ON d.file_id = f.id
-                LEFT JOIN persons p ON d.person_id = p.id
                 LEFT JOIN parties pa ON d.party_id = pa.id
                 WHERE f.filepath = ? OR f.filepath LIKE ?
             """, (filepath, f'%{Path(filepath).name}'))
@@ -149,7 +147,7 @@ def api_document_details():
             'invoice_number': row['invoice_number'], 'ocr_number': row['ocr_number'],
             'company_id': row['company_id'],
             'company': row['company_name'], 'company_slug': row['company_slug'],
-            'person': row['person_name'], 'party_id': row['party_id'],
+            'party_id': row['party_id'],
             'party_name': row['party_name'], 'notes': row['notes'],
             'file_id': row['file_id'],
             'filepath': row['filepath'], 'filename': row['filename'],
