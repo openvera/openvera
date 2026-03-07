@@ -33,11 +33,10 @@ The setup script will:
 
 - [Docker](https://docs.docker.com/get-docker/)
 - [Node.js](https://nodejs.org/) (v22+) — for frontend development
-- `@swedev/ui` — local dependency expected at `../ui` relative to the repo root (see `frontend/package.json`)
 
 ### Frontend
 
-The frontend depends on two local packages: `packages/openvera` and `@swedev/ui` (outside the repo at `../ui`). Both must be available before `npm install` will succeed.
+The frontend depends on the local `packages/openvera` package, which must be built before the frontend.
 
 ```bash
 # Build the openvera package
@@ -62,7 +61,7 @@ Run scripts inside the container:
 docker compose exec openvera python /openvera/scripts/<script>.py
 ```
 
-The Dockerfile requires a pre-built frontend (`cd frontend && npm run build`) because `@swedev/ui` can't resolve inside the Docker build context.
+The Dockerfile requires a pre-built frontend (`cd frontend && npm run build`) because the image copies `frontend/dist` directly rather than building in-image.
 
 ## Project Structure
 

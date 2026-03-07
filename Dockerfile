@@ -3,8 +3,8 @@
 # The frontend must be pre-built before building the Docker image:
 #   cd frontend && npm install && npm run build
 #
-# This is required because @swedev/ui is a local file dependency
-# that isn't available inside the Docker build context.
+# This is required because the image copies pre-built frontend
+# assets rather than building in-image.
 
 FROM python:3.13-slim
 WORKDIR /openvera/app
