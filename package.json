@@ -1,0 +1,16 @@
+{
+  "name": "openvera-workspace",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "packages/*"
+  ],
+  "scripts": {
+    "build:openvera": "npm run build --workspace openvera",
+    "build:frontend": "npm run build --workspace openvera-frontend",
+    "dev:frontend": "npm run dev --workspace openvera-frontend",
+    "lint:frontend": "npm run lint --workspace openvera-frontend",
+    "typecheck:frontend": "npm run typecheck --workspace openvera-frontend",
+    "knip:frontend": "npm run knip --workspace openvera-frontend"
+  }
+}

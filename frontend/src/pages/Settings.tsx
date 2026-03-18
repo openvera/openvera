@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react'
+import { type ChangeEvent, useRef, useState } from 'react'
+import { Button, Select, TextField } from '@swedev/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import {
@@ -111,20 +112,21 @@ export default function Settings() {
             Företagsinformation
           </h2>
           <div className="flex gap-2">
-            <button
-              className="btn btn-ghost btn-sm gap-1"
+            <Button
+              variant="ghost"
+              size="2"
               onClick={() => setEditingCompany(true)}
-            >
-              <Pencil className="w-4 h-4" />
-              Redigera
-            </button>
-            <button
-              className="btn btn-ghost btn-sm gap-1 text-red-400 hover:text-red-600"
+              icon={<Pencil />}
+              text="Redigera"
+            />
+            <Button
+              variant="ghost"
+              size="2"
+              semantic="destructive"
               onClick={() => setDeleteTarget(true)}
-            >
-              <Trash2 className="w-4 h-4" />
-              Ta bort
-            </button>
+              icon={<Trash2 />}
+              text="Ta bort"
+            />
           </div>
         </div>
 
@@ -160,13 +162,13 @@ export default function Settings() {
           <h2 className="text-sm font-semibold uppercase tracking-wider text-base-content/50">
             Konton
           </h2>
-          <button
-            className="btn btn-primary btn-sm gap-1"
+          <Button
+            semantic="action"
+            size="2"
             onClick={() => setShowNewAccount(true)}
-          >
-            <Plus className="w-4 h-4" />
-            Nytt konto
-          </button>
+            icon={<Plus />}
+            text="Nytt konto"
+          />
         </div>
 
         <div className="bg-base-100 rounded-xl shadow-sm overflow-hidden">
@@ -196,20 +198,23 @@ export default function Settings() {
                     <td>{a.currency}</td>
                     <td>
                       <div className="flex gap-0.5">
-                        <button
-                          className="btn btn-ghost btn-xs tooltip"
+                        <Button
+                          variant="ghost"
+                          size="1"
+                          className="tooltip"
                           data-tip="Redigera"
                           onClick={() => setEditAccount(a)}
-                        >
-                          <Pencil className="w-3 h-3" />
-                        </button>
-                        <button
-                          className="btn btn-ghost btn-xs text-red-400 hover:text-red-600 tooltip"
+                          icon={<Pencil />}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="1"
+                          semantic="destructive"
+                          className="tooltip"
                           data-tip="Ta bort"
                           onClick={() => setDeleteAccountTarget(a)}
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
+                          icon={<Trash2 />}
+                        />
                       </div>
                     </td>
                   </tr>
@@ -329,18 +334,20 @@ function ModalFooter({
 }) {
   return (
     <>
-      <button className="btn btn-ghost btn-sm" onClick={onCancel}>
-        Avbryt
-      </button>
-      <button
-        className="btn btn-primary btn-sm"
+      <Button
+        variant="ghost"
+        size="2"
+        onClick={onCancel}
+        text="Avbryt"
+      />
+      <Button
+        semantic="action"
+        size="2"
         onClick={onSubmit}
         disabled={isPending}
-      >
-        {isPending
-          ? <span className="loading loading-spinner loading-xs" />
-          : submitLabel}
-      </button>
+        loading={isPending}
+        text={submitLabel}
+      />
     </>
   )
 }
@@ -382,29 +389,15 @@ function CompanyForm({
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div>
         <label className="label text-sm">Namn</label>
-        <input
-          className="input input-bordered input-sm w-full"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
+        <TextField.Root size="2" variant="surface" value={name} onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)} />
       </div>
       <div>
         <label className="label text-sm">Org.nr</label>
-        <input
-          className="input input-bordered input-sm w-full"
-          value={orgNumber}
-          onChange={(e) => setOrgNumber(e.target.value)}
-          placeholder="XXXXXX-XXXX"
-        />
+        <TextField.Root size="2" variant="surface" value={orgNumber} onChange={(e: ChangeEvent<HTMLInputElement>) => setOrgNumber(e.target.value)} placeholder="XXXXXX-XXXX" />
       </div>
       <div>
         <label className="label text-sm">Räkenskapsår start</label>
-        <input
-          className="input input-bordered input-sm w-full"
-          value={fiscalStart}
-          onChange={(e) => setFiscalStart(e.target.value)}
-          placeholder="MM-DD"
-        />
+        <TextField.Root size="2" variant="surface" value={fiscalStart} onChange={(e: ChangeEvent<HTMLInputElement>) => setFiscalStart(e.target.value)} placeholder="MM-DD" />
       </div>
     </div>
   )
@@ -450,44 +443,34 @@ function AccountForm({
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
         <label className="label text-sm">Namn</label>
-        <input
-          className="input input-bordered input-sm w-full"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
+        <TextField.Root size="2" variant="surface" value={name} onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)} />
       </div>
       <div>
         <label className="label text-sm">Kontonummer</label>
-        <input
-          className="input input-bordered input-sm w-full"
-          value={accountNumber}
-          onChange={(e) => setAccountNumber(e.target.value)}
-        />
+        <TextField.Root size="2" variant="surface" value={accountNumber} onChange={(e: ChangeEvent<HTMLInputElement>) => setAccountNumber(e.target.value)} />
       </div>
       <div>
         <label className="label text-sm">Typ</label>
-        <select
-          className="select select-bordered select-sm w-full"
-          value={accountType}
-          onChange={(e) => setAccountType(e.target.value)}
-        >
-          <option value="bank">Bank</option>
-          <option value="credit_card">Kreditkort</option>
-          <option value="savings">Sparkonto</option>
-          <option value="tax">Skattekonto</option>
-        </select>
+        <Select.Root value={accountType} onValueChange={(v: string | undefined) => setAccountType(v ?? 'bank')} size="2">
+          <Select.Trigger variant="surface" />
+          <Select.Content>
+            <Select.Item value="bank">Bank</Select.Item>
+            <Select.Item value="credit_card">Kreditkort</Select.Item>
+            <Select.Item value="savings">Sparkonto</Select.Item>
+            <Select.Item value="tax">Skattekonto</Select.Item>
+          </Select.Content>
+        </Select.Root>
       </div>
       <div>
         <label className="label text-sm">Valuta</label>
-        <select
-          className="select select-bordered select-sm w-full"
-          value={currency}
-          onChange={(e) => setCurrency(e.target.value)}
-        >
-          <option value="SEK">SEK</option>
-          <option value="EUR">EUR</option>
-          <option value="USD">USD</option>
-        </select>
+        <Select.Root value={currency} onValueChange={(v: string | undefined) => setCurrency(v ?? 'SEK')} size="2">
+          <Select.Trigger variant="surface" />
+          <Select.Content>
+            <Select.Item value="SEK">SEK</Select.Item>
+            <Select.Item value="EUR">EUR</Select.Item>
+            <Select.Item value="USD">USD</Select.Item>
+          </Select.Content>
+        </Select.Root>
       </div>
     </div>
   )

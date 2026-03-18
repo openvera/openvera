@@ -13,7 +13,9 @@
       "require": "./dist/index.cjs"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "vite build",
     "clean": "rm -rf dist"
@@ -22,6 +24,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "@radix-ui/themes": "^3.0.0",
+    "@swedev/ui": "^0.2.0",
     "@tanstack/react-query": "^5.0.0",
     "lucide-react": "^0.469.0",
     "react-router": "^7.0.0"
@@ -37,6 +40,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "@radix-ui/themes": "^3.0.0",
+    "@swedev/ui": "^0.2.0",
     "@tanstack/react-query": "^5.0.0",
     "lucide-react": "^0.469.0",
     "react-router": "^7.0.0"

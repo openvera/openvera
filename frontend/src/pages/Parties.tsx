@@ -1,5 +1,6 @@
-import { useRef, useState } from 'react'
+import { type ChangeEvent, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
+import { Badge, Button, Select, type Semantic, TextArea, TextField } from '@swedev/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link as LinkIcon, Pencil, Plus, Unlink } from 'lucide-react'
 import {
@@ -18,11 +19,11 @@ import {
   useCompany,
 } from 'openvera'
 
-const entityBadge: Record<string, string> = {
-  business: 'badge-primary',
-  person: 'badge-secondary',
-  authority: 'badge-warning',
-  charity: 'badge-accent',
+const entitySemantic: Record<string, Semantic> = {
+  business: 'action',
+  person: 'neutral',
+  authority: 'warning',
+  charity: 'success',
 }
 
 export default function Parties() {
@@ -117,20 +118,20 @@ export default function Parties() {
       <div className="flex items-center justify-between">
         <h1 className="page-title">Parter</h1>
         <div className="flex gap-2">
-          <button
-            className="btn btn-ghost btn-sm gap-1"
+          <Button
+            variant="ghost"
+            size="2"
             onClick={() => setShowLink(true)}
-          >
-            <LinkIcon className="w-4 h-4" />
-            Lägg till befintlig
-          </button>
-          <button
-            className="btn btn-primary btn-sm gap-1"
+            icon={<LinkIcon />}
+            text="Lägg till befintlig"
+          />
+          <Button
+            semantic="action"
+            size="2"
             onClick={() => setShowNew(true)}
-          >
-            <Plus className="w-4 h-4" />
-            Ny part
-          </button>
+            icon={<Plus />}
+            text="Ny part"
+          />
         </div>
       </div>
 
@@ -166,16 +167,10 @@ export default function Parties() {
                         <td className="tabular-nums text-base-content/40">{party.id}</td>
                         <td className="font-medium">{party.name}</td>
                         <td>
-                          <span
-                            className={`badge badge-sm badge-soft ${entityBadge[party.entity_type] ?? 'badge-ghost'}`}
-                          >
-                            {label.entityType(party.entity_type)}
-                          </span>
+                          <Badge semantic={entitySemantic[party.entity_type] ?? 'neutral'} text={label.entityType(party.entity_type)} />
                         </td>
                         <td>
-                          <span className="badge badge-sm badge-ghost">
-                            {label.relationship(party.relationship)}
-                          </span>
+                          <Badge semantic="neutral" text={label.relationship(party.relationship)} />
                         </td>
                         <td className="text-xs">
                           {party.patterns.length > 0
@@ -205,20 +200,23 @@ export default function Parties() {
                             className="flex gap-0.5"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <button
-                              className="btn btn-ghost btn-xs tooltip"
+                            <Button
+                              variant="ghost"
+                              size="1"
+                              className="tooltip"
                               data-tip="Redigera"
                               onClick={() => setEditParty(party)}
-                            >
-                              <Pencil className="w-3 h-3" />
-                            </button>
-                            <button
-                              className="btn btn-ghost btn-xs text-red-400 hover:text-red-600 tooltip"
+                              icon={<Pencil />}
+                            />
+                            <Button
+                              variant="ghost"
+                              size="1"
+                              semantic="destructive"
+                              className="tooltip"
                               data-tip="Ta bort koppling"
                               onClick={() => setUnlinkTarget(party)}
-                            >
-                              <Unlink className="w-3 h-3" />
-                            </button>
+                              icon={<Unlink />}
+                            />
                           </div>
                         </td>
                       </tr>
@@ -289,12 +287,12 @@ export default function Parties() {
         title="Lägg till befintlig part"
         onClose={() => setShowLink(false)}
         footer={
-          <button
-            className="btn btn-ghost btn-sm"
+          <Button
+            variant="ghost"
+            size="2"
             onClick={() => setShowLink(false)}
-          >
-            Stäng
-          </button>
+            text="Stäng"
+          />
         }
       >
         <LinkPartyForm
@@ -341,18 +339,20 @@ function ModalFooter({
 }) {
   return (
     <>
-      <button className="btn btn-ghost btn-sm" onClick={onCancel}>
-        Avbryt
-      </button>
-      <button
-        className="btn btn-primary btn-sm"
+      <Button
+        variant="ghost"
+        size="2"
+        onClick={onCancel}
+        text="Avbryt"
+      />
+      <Button
+        semantic="action"
+        size="2"
         onClick={onSubmit}
         disabled={isPending}
-      >
-        {isPending
-          ? <span className="loading loading-spinner loading-xs" />
-          : submitLabel}
-      </button>
+        loading={isPending}
+        text={submitLabel}
+      />
     </>
   )
 }
@@ -376,22 +376,16 @@ function LinkPartyForm({
   return (
     <div className="space-y-4">
       <div className="flex gap-3">
-        <input
-          className="input input-bordered input-sm grow"
-          placeholder="Sök part..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <select
-          className="select select-bordered select-sm"
-          value={relationship}
-          onChange={(e) => setRelationship(e.target.value)}
-        >
-          <option value="vendor">Leverantör</option>
-          <option value="customer">Kund</option>
-          <option value="authority">Myndighet</option>
-          <option value="charity">Välgörenhet</option>
-        </select>
+        <TextField.Root size="2" variant="surface" placeholder="Sök part..." value={search} onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)} className="grow" />
+        <Select.Root value={relationship} onValueChange={(v: string | undefined) => setRelationship(v ?? 'vendor')} size="2">
+          <Select.Trigger variant="surface" />
+          <Select.Content>
+            <Select.Item value="vendor">Leverantör</Select.Item>
+            <Select.Item value="customer">Kund</Select.Item>
+            <Select.Item value="authority">Myndighet</Select.Item>
+            <Select.Item value="charity">Välgörenhet</Select.Item>
+          </Select.Content>
+        </Select.Root>
       </div>
       <div className="max-h-64 overflow-y-auto">
         {filtered.length === 0
@@ -410,11 +404,7 @@ function LinkPartyForm({
                       disabled={isPending}
                     >
                       <span>{p.name}</span>
-                      <span
-                        className={`badge badge-sm badge-soft ${entityBadge[p.entity_type] ?? 'badge-ghost'}`}
-                      >
-                        {label.entityType(p.entity_type)}
-                      </span>
+                      <Badge semantic={entitySemantic[p.entity_type] ?? 'neutral'} text={label.entityType(p.entity_type)} />
                     </button>
                   </li>
                 ))}
@@ -470,50 +460,38 @@ function PartyForm({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="label text-sm">Namn</label>
-          <input
-            className="input input-bordered input-sm w-full"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
+          <TextField.Root size="2" variant="surface" value={name} onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)} />
         </div>
         <div>
           <label className="label text-sm">Typ</label>
-          <select
-            className="select select-bordered select-sm w-full"
-            value={entityType}
-            onChange={(e) => setEntityType(e.target.value)}
-          >
-            <option value="business">Företag</option>
-            <option value="person">Person</option>
-            <option value="authority">Myndighet</option>
-            <option value="charity">Välgörenhet</option>
-          </select>
+          <Select.Root value={entityType} onValueChange={(v: string | undefined) => setEntityType(v ?? 'business')} size="2">
+            <Select.Trigger variant="surface" />
+            <Select.Content>
+              <Select.Item value="business">Företag</Select.Item>
+              <Select.Item value="person">Person</Select.Item>
+              <Select.Item value="authority">Myndighet</Select.Item>
+              <Select.Item value="charity">Välgörenhet</Select.Item>
+            </Select.Content>
+          </Select.Root>
         </div>
         <div>
           <label className="label text-sm">Kontokod (BAS)</label>
-          <select
-            className="select select-bordered select-sm w-full"
-            value={defaultCode}
-            onChange={(e) => setDefaultCode(e.target.value)}
-          >
-            <option value="">Ingen</option>
-            {basAccounts.map((a) => (
-              <option key={a.code} value={a.code}>
-                {a.code} — {a.name}
-              </option>
-            ))}
-          </select>
+          <Select.Root value={defaultCode || undefined} onValueChange={(v: string | undefined) => setDefaultCode(v === '__clear__' ? '' : (v ?? ''))} size="2">
+            <Select.Trigger variant="surface" placeholder="Ingen" />
+            <Select.Content>
+              <Select.Item value="__clear__">Ingen</Select.Item>
+              {basAccounts.map((a) => (
+                <Select.Item key={a.code} value={a.code}>
+                  {a.code} — {a.name}
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select.Root>
         </div>
       </div>
       <div>
         <label className="label text-sm">Mönster (ett per rad)</label>
-        <textarea
-          className="textarea textarea-bordered w-full text-sm"
-          rows={3}
-          value={patterns}
-          onChange={(e) => setPatterns(e.target.value)}
-          placeholder={'LEVERANTÖR AB\nLEV-NR 12345'}
-        />
+        <TextArea.Root size="2" variant="surface" rows={3} value={patterns} onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setPatterns(e.target.value)} placeholder={'LEVERANTÖR AB\nLEV-NR 12345'} />
       </div>
     </div>
   )

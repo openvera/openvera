@@ -1,3 +1,4 @@
+import { Badge, Button } from '@swedev/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowRight, CheckCircle, ClipboardCheck, PartyPopper, XCircle } from 'lucide-react'
 import {
@@ -96,9 +97,7 @@ export default function ReviewQueue() {
     <div className="space-y-8">
       <div className="flex items-center gap-3">
         <h1 className="page-title">Granska</h1>
-        <span className="badge badge-primary tabular-nums">
-          {totalItems} att granska
-        </span>
+        <Badge className="tabular-nums">{totalItems} att granska</Badge>
       </div>
 
       {/* Suggested matches */}
@@ -158,9 +157,7 @@ export default function ReviewQueue() {
                           {match.doc_currency ? ` ${match.doc_currency}` : ''}
                         </p>
                       )}
-                      <span className="badge badge-ghost badge-sm">
-                        {label.docType(match.doc_type)}
-                      </span>
+                      <Badge semantic="neutral" text={label.docType(match.doc_type)} />
                     </div>
                   </div>
                 </div>
@@ -169,38 +166,27 @@ export default function ReviewQueue() {
                 <div className="flex items-center justify-between px-5 py-3 bg-base-200/30 border-t border-base-200">
                   <div>
                     {match.confidence && (
-                      <span className="badge badge-info badge-sm tabular-nums">
-                        {match.confidence}% konfidens
-                      </span>
+                      <Badge semantic="info" className="tabular-nums">{match.confidence}% konfidens</Badge>
                     )}
                   </div>
                   <div className="flex gap-2">
-                    <button
-                      className="btn btn-sm btn-ghost gap-1 text-base-content/60 hover:text-red-600"
-                      onClick={() =>
-                        rejectMutation.mutate({
-                          transaction_id: match.transaction_id,
-                          document_id: match.document_id,
-                        })
-                      }
+                    <Button
+                      variant="ghost"
+                      size="2"
+                      semantic="destructive"
+                      onClick={() => rejectMutation.mutate({ transaction_id: match.transaction_id, document_id: match.document_id })}
                       disabled={rejectMutation.isPending}
-                    >
-                      <XCircle className="w-4 h-4" />
-                      Avvisa
-                    </button>
-                    <button
-                      className="btn btn-sm btn-success gap-1"
-                      onClick={() =>
-                        approveMutation.mutate({
-                          transaction_id: match.transaction_id,
-                          document_id: match.document_id,
-                        })
-                      }
+                      icon={<XCircle />}
+                      text="Avvisa"
+                    />
+                    <Button
+                      semantic="success"
+                      size="2"
+                      onClick={() => approveMutation.mutate({ transaction_id: match.transaction_id, document_id: match.document_id })}
                       disabled={approveMutation.isPending}
-                    >
-                      <CheckCircle className="w-4 h-4" />
-                      Godkänn
-                    </button>
+                      icon={<CheckCircle />}
+                      text="Godkänn"
+                    />
                   </div>
                 </div>
               </div>
@@ -245,19 +231,17 @@ export default function ReviewQueue() {
                         <DateCell date={doc.doc_date} />
                       </td>
                       <td>
-                        <span className="badge badge-ghost badge-sm">
-                          {label.docType(doc.doc_type)}
-                        </span>
+                        <Badge semantic="neutral" text={label.docType(doc.doc_type)} />
                       </td>
                       <td>
-                        <button
-                          className="btn btn-sm btn-ghost gap-1"
+                        <Button
+                          variant="ghost"
+                          size="2"
                           onClick={() => reviewMutation.mutate(doc.id)}
                           disabled={reviewMutation.isPending}
-                        >
-                          <ClipboardCheck className="w-4 h-4" />
-                          Markera granskad
-                        </button>
+                          icon={<ClipboardCheck />}
+                          text="Markera granskad"
+                        />
                       </td>
                     </tr>
                   ))}

@@ -1,4 +1,5 @@
 import { Link } from 'react-router'
+import { Badge } from '@swedev/ui'
 import { useQuery } from '@tanstack/react-query'
 import {
   ArrowLeftRight,
@@ -174,9 +175,7 @@ export default function Dashboard() {
                 Ekonomisk sammanfattning
               </h2>
               {selected && (
-                <span className="badge badge-ghost badge-sm">
-                  {selected.name}
-                </span>
+                <Badge semantic="neutral" text={selected.name} />
               )}
             </div>
           </div>

@@ -36,15 +36,19 @@ The setup script will:
 
 ### Frontend
 
-The frontend depends on the local `packages/openvera` package, which must be built before the frontend.
+The repo uses npm workspaces. Install dependencies once from the repo root.
 
 ```bash
-# Build the openvera package
-cd packages/openvera && npm install && npm run build && cd ../..
+npm install
+
+# Build the shared openvera package
+npm run build:openvera
 
 # Start frontend dev server (with hot reload)
-cd frontend && npm install && npm run dev
+npm run dev:frontend
 ```
+
+The frontend still consumes the built `openvera` package output, so rebuild `openvera` after changes under `packages/openvera/`.
 
 ### Docker
 
@@ -61,7 +65,7 @@ Run scripts inside the container:
 docker compose exec openvera python /openvera/scripts/<script>.py
 ```
 
-The Dockerfile requires a pre-built frontend (`cd frontend && npm run build`) because the image copies `frontend/dist` directly rather than building in-image.
+The Dockerfile requires a pre-built frontend (`npm run build:openvera && npm run build:frontend`) because the image copies `frontend/dist` directly rather than building in-image.
 
 ## Project Structure
 

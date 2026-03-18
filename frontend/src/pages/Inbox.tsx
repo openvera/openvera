@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react'
+import type { CheckedState } from '@radix-ui/react-checkbox'
+import { Badge, Button, LabelledCheckbox } from '@swedev/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ChevronDown,
@@ -65,16 +67,15 @@ export default function Inbox() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="page-title">Inkorg</h1>
-        <button
-          className="btn btn-primary btn-sm"
+        <Button
+          semantic="action"
+          size="2"
           disabled={scanMutation.isPending}
+          loading={scanMutation.isPending}
           onClick={() => scanMutation.mutate()}
-        >
-          <RotateCw
-            className={`w-4 h-4 ${scanMutation.isPending ? 'animate-spin' : ''}`}
-          />
-          Skanna inkorg
-        </button>
+          icon={<RotateCw />}
+          text="Skanna inkorg"
+        />
       </div>
 
       {scanMutation.isSuccess && (() => {
@@ -89,9 +90,13 @@ export default function Inbox() {
         return (
           <div className={`alert alert-sm alert-${semantic}`}>
             <span className="flex-1">{d.scanned} skannade — {summary}</span>
-            <button className={`btn btn-${semantic} btn-sm ml-auto px-2`} onClick={() => scanMutation.reset()}>
-              <XCircle className="w-4 h-4" />
-            </button>
+            <Button
+              semantic={semantic as any}
+              size="2"
+              className="ml-auto"
+              onClick={() => scanMutation.reset()}
+              icon={<XCircle />}
+            />
           </div>
         )
       })()}
@@ -167,15 +172,12 @@ export default function Inbox() {
             Filträd
           </h2>
           {duplicateCount > 0 && (
-            <label className="flex items-center gap-1.5 text-xs text-base-content/50 cursor-pointer">
-              <input
-                type="checkbox"
-                className="checkbox checkbox-xs"
-                checked={showDuplicates}
-                onChange={(e) => setShowDuplicates(e.target.checked)}
-              />
-              Visa {duplicateCount} dubletter
-            </label>
+            <LabelledCheckbox
+              size="1"
+              checked={showDuplicates}
+              onCheckedChange={(v: CheckedState) => setShowDuplicates(v === true)}
+              label={`Visa ${duplicateCount} dubletter`}
+            />
           )}
         </div>
 
@@ -257,7 +259,7 @@ function TreeNode({ node, depth, showDuplicates, onDelete }: { node: FileTreeNod
       )}
       {node.is_duplicate && (
         <>
-          <span className="badge badge-warning badge-xs badge-soft">dublett</span>
+          <Badge semantic="warning" text="dublett" />
           <a
             href={`/api/files/view-by-path?path=${encodeURIComponent(node.duplicate_of!)}`}
             target="_blank"
@@ -268,15 +270,17 @@ function TreeNode({ node, depth, showDuplicates, onDelete }: { node: FileTreeNod
         </>
       )}
       {!node.in_db && !node.is_duplicate && (
-        <span className="badge badge-ghost badge-xs text-base-content/40">ej i DB</span>
+        <Badge semantic="neutral" text="ej i DB" />
       )}
-      <button
-        className="opacity-0 group-hover:opacity-100 btn btn-ghost btn-xs text-error/50 hover:text-error"
+      <Button
+        variant="ghost"
+        size="1"
+        semantic="destructive"
+        className="opacity-0 group-hover:opacity-100"
         onClick={() => onDelete(node.path)}
         title="Ta bort fil"
-      >
-        <Trash2 className="w-4 h-4" />
-      </button>
+        icon={<Trash2 />}
+      />
     </li>
   )
 }

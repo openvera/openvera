@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { type ChangeEvent, useState } from 'react'
+import { Button, TextField } from '@swedev/ui'
 import { useQuery } from '@tanstack/react-query'
 import { FileOutput } from 'lucide-react'
 import { AmountCell, EmptyState, getReport, getSieExportUrl, getVatReport, useCompany } from 'openvera'
@@ -37,34 +38,24 @@ export default function Reports() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="page-title">Rapporter</h1>
-        <a
+        <Button
+          variant="outline"
+          size="2"
           href={getSieExportUrl(selected.id, currentYear)}
-          className="btn btn-sm btn-outline gap-1"
           download
-        >
-          <FileOutput className="w-4 h-4" />
-          Exportera SIE4
-        </a>
+          icon={<FileOutput />}
+          text="Exportera SIE4"
+        />
       </div>
 
       <div className="flex gap-3 items-end">
         <div>
           <label className="label text-sm">Från</label>
-          <input
-            type="date"
-            className="input input-bordered input-sm"
-            value={from}
-            onChange={(e) => setFrom(e.target.value)}
-          />
+          <TextField.Root type="date" size="2" variant="surface" value={from} onChange={(e: ChangeEvent<HTMLInputElement>) => setFrom(e.target.value)} />
         </div>
         <div>
           <label className="label text-sm">Till</label>
-          <input
-            type="date"
-            className="input input-bordered input-sm"
-            value={to}
-            onChange={(e) => setTo(e.target.value)}
-          />
+          <TextField.Root type="date" size="2" variant="surface" value={to} onChange={(e: ChangeEvent<HTMLInputElement>) => setTo(e.target.value)} />
         </div>
       </div>
 

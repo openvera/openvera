@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
+import { type ChangeEvent, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
+import { Badge, Button, Checkbox, Select, TextField } from '@swedev/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { RefreshCw, Search } from 'lucide-react'
 import {
@@ -147,39 +148,38 @@ export default function Transactions() {
 
       {/* Filter bar */}
       <div className="flex flex-wrap items-center gap-3">
-        <select
-          className="select select-bordered select-sm"
-          value={accountFilter}
-          onChange={(e) => setAccountFilter(e.target.value)}
-        >
-          <option value="all">Alla konton</option>
-          {accounts.map((a) => (
-            <option key={a.id} value={String(a.id)}>
-              {a.name}
-            </option>
-          ))}
-        </select>
+        <Select.Root value={accountFilter} onValueChange={(v: string | undefined) => setAccountFilter(v ?? 'all')} size="2">
+          <Select.Trigger variant="surface" placeholder="Alla konton" />
+          <Select.Content>
+            <Select.Item value="all">Alla konton</Select.Item>
+            {accounts.map((a) => (
+              <Select.Item key={a.id} value={String(a.id)}>
+                {a.name}
+              </Select.Item>
+            ))}
+          </Select.Content>
+        </Select.Root>
 
-        <select
-          className="select select-bordered select-sm"
-          value={matchFilter}
-          onChange={(e) => setMatchFilter(e.target.value as MatchFilter)}
-        >
-          <option value="all">Alla</option>
-          <option value="matched">Matchade</option>
-          <option value="unmatched">Omatchade</option>
-        </select>
+        <Select.Root value={matchFilter} onValueChange={(v: string | undefined) => setMatchFilter((v ?? 'all') as MatchFilter)} size="2">
+          <Select.Trigger variant="surface" placeholder="Alla" />
+          <Select.Content>
+            <Select.Item value="all">Alla</Select.Item>
+            <Select.Item value="matched">Matchade</Select.Item>
+            <Select.Item value="unmatched">Omatchade</Select.Item>
+          </Select.Content>
+        </Select.Root>
 
-        <label className="input input-bordered input-sm flex items-center gap-2 w-60">
-          <Search className="w-4 h-4 opacity-30" />
-          <input
-            type="text"
-            placeholder="Sök referens..."
-            className="grow"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </label>
+        <TextField.Root
+          size="2"
+          variant="surface"
+          placeholder="Sök referens..."
+          value={search}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+        >
+          <TextField.Slot side="left">
+            <Search className="w-4 h-4 opacity-30" />
+          </TextField.Slot>
+        </TextField.Root>
 
         <span className="text-sm text-base-content/50 tabular-nums">
           {filtered.length} transaktioner
@@ -191,59 +191,51 @@ export default function Transactions() {
         <span className="text-sm font-medium">
           {selectedIds.size} markerade
         </span>
-        <select
-          className="select select-bordered select-sm w-auto"
-          value={batchCode}
-          onChange={(e) => setBatchCode(e.target.value)}
-        >
-          <option value="">Kontokod...</option>
-          {basAccounts.map((ba) => (
-            <option key={ba.code} value={ba.code}>
-              {ba.code} {ba.name}
-            </option>
-          ))}
-        </select>
-        <select
-          className="select select-bordered select-sm w-auto"
-          value={batchCategory}
-          onChange={(e) => setBatchCategory(e.target.value)}
-        >
-          <option value="">Kategori...</option>
-          <option value="expense">Utgift</option>
-          <option value="income">Intäkt</option>
-          <option value="transfer">Överföring</option>
-          <option value="salary">Lön</option>
-        </select>
-        <select
-          className="select select-bordered select-sm w-auto"
-          value={batchTransfer}
-          onChange={(e) => setBatchTransfer(e.target.value)}
-        >
-          <option value="">Överföring...</option>
-          <option value="yes">Intern överföring: Ja</option>
-          <option value="no">Intern överföring: Nej</option>
-        </select>
-        <select
-          className="select select-bordered select-sm w-auto"
-          value={batchNeedsReceipt}
-          onChange={(e) => setBatchNeedsReceipt(e.target.value)}
-        >
-          <option value="">Underlag...</option>
-          <option value="yes">Behöver underlag: Ja</option>
-          <option value="no">Behöver underlag: Nej</option>
-        </select>
+        <Select.Root value={batchCode || undefined} onValueChange={(v: string | undefined) => setBatchCode(v ?? '')} size="2">
+          <Select.Trigger variant="surface" placeholder="Kontokod..." />
+          <Select.Content>
+            {basAccounts.map((ba) => (
+              <Select.Item key={ba.code} value={ba.code}>
+                {ba.code} {ba.name}
+              </Select.Item>
+            ))}
+          </Select.Content>
+        </Select.Root>
+        <Select.Root value={batchCategory || undefined} onValueChange={(v: string | undefined) => setBatchCategory(v ?? '')} size="2">
+          <Select.Trigger variant="surface" placeholder="Kategori..." />
+          <Select.Content>
+            <Select.Item value="expense">Utgift</Select.Item>
+            <Select.Item value="income">Intäkt</Select.Item>
+            <Select.Item value="transfer">Överföring</Select.Item>
+            <Select.Item value="salary">Lön</Select.Item>
+          </Select.Content>
+        </Select.Root>
+        <Select.Root value={batchTransfer || undefined} onValueChange={(v: string | undefined) => setBatchTransfer(v ?? '')} size="2">
+          <Select.Trigger variant="surface" placeholder="Överföring..." />
+          <Select.Content>
+            <Select.Item value="yes">Intern överföring: Ja</Select.Item>
+            <Select.Item value="no">Intern överföring: Nej</Select.Item>
+          </Select.Content>
+        </Select.Root>
+        <Select.Root value={batchNeedsReceipt || undefined} onValueChange={(v: string | undefined) => setBatchNeedsReceipt(v ?? '')} size="2">
+          <Select.Trigger variant="surface" placeholder="Underlag..." />
+          <Select.Content>
+            <Select.Item value="yes">Behöver underlag: Ja</Select.Item>
+            <Select.Item value="no">Behöver underlag: Nej</Select.Item>
+          </Select.Content>
+        </Select.Root>
         <span className="flex-1" />
-        <button
-          className="btn btn-primary btn-sm"
+        <Button
+          semantic="action"
+          size="2"
           onClick={handleBatchSave}
           disabled={batchMutation.isPending || !hasBatchChanges}
-        >
-          {batchMutation.isPending
-            ? <span className="loading loading-spinner loading-xs" />
-            : 'Spara'}
-        </button>
-        <button
-          className="btn btn-ghost btn-sm"
+          loading={batchMutation.isPending}
+          text="Spara"
+        />
+        <Button
+          variant="ghost"
+          size="2"
           onClick={() => {
             setSelectedIds(new Set())
             setBatchCode('')
@@ -251,9 +243,8 @@ export default function Transactions() {
             setBatchTransfer('')
             setBatchNeedsReceipt('')
           }}
-        >
-          Avbryt
-        </button>
+          text="Avbryt"
+        />
       </div>
 
       {filtered.length === 0
@@ -267,11 +258,10 @@ export default function Transactions() {
                   <thead>
                     <tr>
                       <th className="w-8">
-                        <input
-                          type="checkbox"
-                          className="checkbox checkbox-sm"
+                        <Checkbox
+                          size="2"
                           checked={allSelected}
-                          onChange={toggleAll}
+                          onCheckedChange={() => toggleAll()}
                         />
                       </th>
                       <th className="tabular-nums text-base-content/40 w-12">ID</th>
@@ -291,11 +281,10 @@ export default function Transactions() {
                         onClick={() => navigate(`/transactions/${txn.id}`)}
                       >
                         <td onClick={(e) => e.stopPropagation()}>
-                          <input
-                            type="checkbox"
-                            className="checkbox checkbox-sm"
+                          <Checkbox
+                            size="2"
                             checked={selectedIds.has(txn.id)}
-                            onChange={() => toggleOne(txn.id)}
+                            onCheckedChange={() => toggleOne(txn.id)}
                           />
                         </td>
                         <td className="tabular-nums text-base-content/40">{txn.id}</td>
@@ -315,16 +304,14 @@ export default function Transactions() {
                         <td>
                           {txn.is_internal_transfer
                             ? (
-                                <span className="badge badge-ghost badge-sm gap-1">
+                                <Badge semantic="neutral">
                                   <RefreshCw className="w-3 h-3" />
                                   Överföring
-                                </span>
+                                </Badge>
                               )
                             : txn.needs_receipt === 0
                               ? (
-                                  <span className="badge badge-ghost badge-sm gap-1">
-                                    Behövs ej
-                                  </span>
+                                  <Badge semantic="neutral" text="Behövs ej" />
                                 )
                               : (
                                   <StatusBadge

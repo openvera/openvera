@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { type ChangeEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
+import { Badge, Button, Checkbox, Select, type Semantic, TextField } from '@swedev/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Archive, Check, Search, Trash2 } from 'lucide-react'
 import {
@@ -22,15 +23,15 @@ import {
 
 type DocFilter = 'all' | 'matched' | 'unmatched' | 'reviewed' | 'unreviewed' | 'no_party' | 'archived'
 
-const docTypeBadge: Record<string, string> = {
-  invoice: 'badge-info badge-soft',
-  receipt: 'badge-success badge-soft',
-  kvittens: 'badge-success badge-soft',
-  outgoing_invoice: 'badge-primary badge-soft',
-  credit_note: 'badge-warning badge-soft',
-  salary: 'badge-accent badge-soft',
-  reminder: 'badge-error badge-soft',
-  contract: 'badge-neutral badge-soft',
+const docTypeSemantic: Record<string, Semantic> = {
+  invoice: 'info',
+  receipt: 'success',
+  kvittens: 'success',
+  outgoing_invoice: 'action',
+  credit_note: 'warning',
+  salary: 'action',
+  reminder: 'error',
+  contract: 'neutral',
 }
 
 export default function Documents() {
@@ -219,43 +220,36 @@ export default function Documents() {
       <h1 className="page-title">Dokument</h1>
 
       <div className="flex flex-wrap items-center gap-3">
-        <select
-          className="select select-bordered select-sm"
-          value={filter}
-          onChange={(e) => setFilter(e.target.value as DocFilter)}
-        >
-          <option value="all">Alla (ej arkiverade)</option>
-          <option value="matched">Matchade</option>
-          <option value="unmatched">Omatchade</option>
-          <option value="reviewed">Granskade</option>
-          <option value="unreviewed">Ej granskade</option>
-          <option value="no_party">Utan part</option>
-          <option value="archived">Arkiverade</option>
-        </select>
+        <Select.Root value={filter} onValueChange={(v: string | undefined) => setFilter((v ?? 'all') as DocFilter)} size="2">
+          <Select.Trigger variant="surface" placeholder="Filter..." />
+          <Select.Content>
+            <Select.Item value="all">Alla (ej arkiverade)</Select.Item>
+            <Select.Item value="matched">Matchade</Select.Item>
+            <Select.Item value="unmatched">Omatchade</Select.Item>
+            <Select.Item value="reviewed">Granskade</Select.Item>
+            <Select.Item value="unreviewed">Ej granskade</Select.Item>
+            <Select.Item value="no_party">Utan part</Select.Item>
+            <Select.Item value="archived">Arkiverade</Select.Item>
+          </Select.Content>
+        </Select.Root>
 
-        <select
-          className="select select-bordered select-sm"
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-        >
-          <option value="all">Alla typer</option>
-          {docTypes.map((t) => (
-            <option key={t} value={t}>
-              {label.docType(t)}
-            </option>
-          ))}
-        </select>
+        <Select.Root value={typeFilter} onValueChange={(v: string | undefined) => setTypeFilter(v ?? 'all')} size="2">
+          <Select.Trigger variant="surface" placeholder="Alla typer" />
+          <Select.Content>
+            <Select.Item value="all">Alla typer</Select.Item>
+            {docTypes.map((t) => (
+              <Select.Item key={t} value={t}>
+                {label.docType(t)}
+              </Select.Item>
+            ))}
+          </Select.Content>
+        </Select.Root>
 
-        <label className="input input-bordered input-sm flex items-center gap-2 w-60">
-          <Search className="w-4 h-4 opacity-30" />
-          <input
-            type="text"
-            placeholder="Sök fil, part, fakturanr..."
-            className="grow"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </label>
+        <TextField.Root size="2" variant="surface" placeholder="Sök fil, part, fakturanr..." value={search} onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}>
+          <TextField.Slot side="left">
+            <Search className="w-4 h-4 opacity-30" />
+          </TextField.Slot>
+        </TextField.Root>
 
         <span className="text-sm text-base-content/50 tabular-nums">
           {filtered.length} dokument
@@ -267,69 +261,61 @@ export default function Documents() {
         <span className="text-sm font-medium">
           {selectedIds.size} markerade
         </span>
-        <select
-          className="select select-bordered select-sm w-auto"
-          value={batchDocType}
-          onChange={(e) => setBatchDocType(e.target.value)}
-        >
-          <option value="">Typ...</option>
-          <option value="invoice">Faktura</option>
-          <option value="receipt">Kvitto</option>
-          <option value="kvittens">Kvittens</option>
-          <option value="outgoing_invoice">Utgående faktura</option>
-          <option value="credit_note">Kreditnota</option>
-          <option value="reminder">Påminnelse</option>
-          <option value="contract">Avtal</option>
-          <option value="salary">Lönebesked</option>
-          <option value="statement">Kontoutdrag</option>
-          <option value="balansrapport">Balansrapport</option>
-          <option value="resultatrapport">Resultatrapport</option>
-          <option value="betalningssammanstalning">Betalningssammanställning</option>
-          <option value="other">Övrigt</option>
-        </select>
-        <select
-          className="select select-bordered select-sm w-auto"
-          value={batchPartyId}
-          onChange={(e) => setBatchPartyId(e.target.value)}
-        >
-          <option value="">Part...</option>
-          <option value="none">— Ta bort part —</option>
-          {parties.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-        <select
-          className="select select-bordered select-sm w-auto"
-          value={batchReviewed}
-          onChange={(e) => setBatchReviewed(e.target.value)}
-        >
-          <option value="">Granskning...</option>
-          <option value="yes">Markera granskad</option>
-          <option value="no">Ångra granskning</option>
-        </select>
-        <select
-          className="select select-bordered select-sm w-auto"
-          value={batchArchived}
-          onChange={(e) => setBatchArchived(e.target.value)}
-        >
-          <option value="">Arkivering...</option>
-          <option value="yes">Arkivera</option>
-          <option value="no">Avarkivera</option>
-        </select>
+        <Select.Root value={batchDocType || undefined} onValueChange={(v: string | undefined) => setBatchDocType(v ?? '')} size="2">
+          <Select.Trigger variant="surface" placeholder="Typ..." />
+          <Select.Content>
+            <Select.Item value="invoice">Faktura</Select.Item>
+            <Select.Item value="receipt">Kvitto</Select.Item>
+            <Select.Item value="kvittens">Kvittens</Select.Item>
+            <Select.Item value="outgoing_invoice">Utgående faktura</Select.Item>
+            <Select.Item value="credit_note">Kreditnota</Select.Item>
+            <Select.Item value="reminder">Påminnelse</Select.Item>
+            <Select.Item value="contract">Avtal</Select.Item>
+            <Select.Item value="salary">Lönebesked</Select.Item>
+            <Select.Item value="statement">Kontoutdrag</Select.Item>
+            <Select.Item value="balansrapport">Balansrapport</Select.Item>
+            <Select.Item value="resultatrapport">Resultatrapport</Select.Item>
+            <Select.Item value="betalningssammanstalning">Betalningssammanställning</Select.Item>
+            <Select.Item value="other">Övrigt</Select.Item>
+          </Select.Content>
+        </Select.Root>
+        <Select.Root value={batchPartyId || undefined} onValueChange={(v: string | undefined) => setBatchPartyId(v ?? '')} size="2">
+          <Select.Trigger variant="surface" placeholder="Part..." />
+          <Select.Content>
+            <Select.Item value="none">— Ta bort part —</Select.Item>
+            {parties.map((p) => (
+              <Select.Item key={p.id} value={String(p.id)}>
+                {p.name}
+              </Select.Item>
+            ))}
+          </Select.Content>
+        </Select.Root>
+        <Select.Root value={batchReviewed || undefined} onValueChange={(v: string | undefined) => setBatchReviewed(v ?? '')} size="2">
+          <Select.Trigger variant="surface" placeholder="Granskning..." />
+          <Select.Content>
+            <Select.Item value="yes">Markera granskad</Select.Item>
+            <Select.Item value="no">Ångra granskning</Select.Item>
+          </Select.Content>
+        </Select.Root>
+        <Select.Root value={batchArchived || undefined} onValueChange={(v: string | undefined) => setBatchArchived(v ?? '')} size="2">
+          <Select.Trigger variant="surface" placeholder="Arkivering..." />
+          <Select.Content>
+            <Select.Item value="yes">Arkivera</Select.Item>
+            <Select.Item value="no">Avarkivera</Select.Item>
+          </Select.Content>
+        </Select.Root>
         <span className="flex-1" />
-        <button
-          className="btn btn-primary btn-sm"
+        <Button
+          semantic="action"
+          size="2"
           onClick={handleBatchSave}
           disabled={batchMutation.isPending || !hasBatchChanges}
-        >
-          {batchMutation.isPending
-            ? <span className="loading loading-spinner loading-xs" />
-            : 'Spara'}
-        </button>
-        <button
-          className="btn btn-ghost btn-sm"
+          loading={batchMutation.isPending}
+          text="Spara"
+        />
+        <Button
+          variant="ghost"
+          size="2"
           onClick={() => {
             setSelectedIds(new Set())
             setBatchDocType('')
@@ -337,9 +323,8 @@ export default function Documents() {
             setBatchReviewed('')
             setBatchArchived('')
           }}
-        >
-          Avbryt
-        </button>
+          text="Avbryt"
+        />
       </div>
 
       {filtered.length === 0
@@ -356,12 +341,7 @@ export default function Documents() {
                   <thead>
                     <tr>
                       <th className="w-8">
-                        <input
-                          type="checkbox"
-                          className="checkbox checkbox-sm"
-                          checked={allSelected}
-                          onChange={toggleAll}
-                        />
+                        <Checkbox size="2" checked={allSelected} onCheckedChange={() => toggleAll()} />
                       </th>
                       <th className="tabular-nums text-base-content/40 w-12">ID</th>
                       <th>Fil</th>
@@ -384,12 +364,7 @@ export default function Documents() {
                         onClick={() => setDetailId(doc.id)}
                       >
                         <td onClick={(e) => e.stopPropagation()}>
-                          <input
-                            type="checkbox"
-                            className="checkbox checkbox-sm"
-                            checked={selectedIds.has(doc.id)}
-                            onChange={() => toggleOne(doc.id)}
-                          />
+                          <Checkbox size="2" checked={selectedIds.has(doc.id)} onCheckedChange={() => toggleOne(doc.id)} />
                         </td>
                         <td className="tabular-nums text-base-content/40">{doc.id}</td>
                         <td className="text-xs max-w-48 truncate">
@@ -453,9 +428,12 @@ export default function Documents() {
                           <DateCell date={doc.doc_date} />
                         </td>
                         <td>
-                          <span className={`badge badge-sm inline-block max-w-28 truncate align-middle ${docTypeBadge[doc.doc_type] ?? 'badge-ghost'}`} title={label.docType(doc.doc_type)}>
-                            {label.docType(doc.doc_type)}
-                          </span>
+                          <Badge
+                            semantic={docTypeSemantic[doc.doc_type] ?? 'neutral'}
+                            className="max-w-28 truncate"
+                            title={label.docType(doc.doc_type)}
+                            text={label.docType(doc.doc_type)}
+                          />
                         </td>
                         <td className="text-nowrap">
                           <StatusBadge
@@ -471,40 +449,41 @@ export default function Documents() {
                             className="flex gap-0.5"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <button
-                              className={`btn btn-xs tooltip ${doc.reviewed_at ? 'btn-success btn-soft' : 'btn-ghost opacity-30'}`}
-                              data-tip={
-                                doc.reviewed_at
-                                  ? 'Ångra granskning'
-                                  : 'Markera granskad'
-                              }
+                            <Button
+                              variant={doc.reviewed_at ? 'soft' : 'ghost'}
+                              {...(doc.reviewed_at ? { semantic: 'success' as const } : {})}
+                              size="1"
+                              className={`tooltip ${!doc.reviewed_at ? 'opacity-30' : ''}`}
+                              data-tip={doc.reviewed_at ? 'Ångra granskning' : 'Markera granskad'}
                               onClick={() =>
                                 reviewMutation.mutate({
                                   id: doc.id,
                                   unreview: !!doc.reviewed_at,
                                 })
                               }
-                            >
-                              <Check className="w-4 h-4" />
-                            </button>
+                              icon={<Check />}
+                            />
                             {!doc.is_archived && (
-                              <button
-                                className="btn btn-ghost btn-xs tooltip"
+                              <Button
+                                variant="ghost"
+                                size="1"
+                                className="tooltip"
                                 data-tip="Arkivera"
                                 onClick={() =>
                                   archiveMutation.mutate(doc.id)
                                 }
-                              >
-                                <Archive className="w-4 h-4" />
-                              </button>
+                                icon={<Archive />}
+                              />
                             )}
-                            <button
-                              className="btn btn-ghost btn-xs text-red-400 hover:text-red-600 tooltip"
+                            <Button
+                              variant="ghost"
+                              size="1"
+                              semantic="destructive"
+                              className="tooltip"
                               data-tip="Ta bort"
                               onClick={() => setDeleteTarget(doc)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                              icon={<Trash2 />}
+                            />
                           </div>
                         </td>
                       </tr>
@@ -534,4 +513,3 @@ export default function Documents() {
     </div>
   )
 }
-

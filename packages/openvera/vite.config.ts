@@ -14,7 +14,7 @@ export default defineConfig({
     rollupOptions: {
       external: [
         "react", "react-dom", "react/jsx-runtime",
-        "@radix-ui/themes", "@tanstack/react-query",
+        "@radix-ui/themes", "@swedev/ui", "@tanstack/react-query",
         "lucide-react",
         "react-router",
       ],
