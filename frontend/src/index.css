@@ -1,6 +1,7 @@
 @layer base, vendor, swedev, components;
 
 @import "tailwindcss";
+@source "../../packages/openvera/src";
 @import "@radix-ui/themes/styles.css" layer(vendor);
 @import "@swedev/ui/styles.css";
 
@@ -31,6 +32,10 @@
 
 
 @layer components {
+
+  .lucide {
+    @apply w-4 h-4;
+  }
 
 
   .modal {

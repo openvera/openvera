@@ -8,7 +8,7 @@ import { useState } from 'react'
 import { Spinner } from '@radix-ui/themes'
 import { Button, Dropdown, TextField } from '@swedev/ui'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Building2, Check, Plus } from 'lucide-react'
+import { Building2, Check, ChevronDown, Plus } from 'lucide-react'
 
 import { createCompany } from '../api/companies'
 import { useCompany } from '../hooks/useCompany'
@@ -56,6 +56,7 @@ export default function CompanySelector() {
           icon={<Building2 />}
         >
           <span className="font-medium">{selected?.name ?? 'Välj företag'}</span>
+          <ChevronDown />
         </Button>
       </Dropdown.Trigger>
 
@@ -67,6 +68,7 @@ export default function CompanySelector() {
           return (
             <Dropdown.Item
               key={c.slug}
+              className="h-auto py-2"
               onSelect={() => {
                 setSelected(c)
                 close()
@@ -80,7 +82,7 @@ export default function CompanySelector() {
                       : 'bg-base-200/60 text-base-content/40'
                   }`}
                 >
-                  <Building2 className="w-4 h-4" />
+                  <Building2 />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p
@@ -97,7 +99,7 @@ export default function CompanySelector() {
                   )}
                 </div>
                 {isActive && (
-                  <Check className="w-4 h-4 text-primary shrink-0" />
+                  <Check className="text-primary shrink-0" />
                 )}
               </div>
             </Dropdown.Item>
