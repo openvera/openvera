@@ -1,4 +1,5 @@
 import { Link } from 'react-router'
+import { Spinner } from '@radix-ui/themes'
 import { Badge } from '@swedev/ui'
 import { useQuery } from '@tanstack/react-query'
 import {
@@ -32,7 +33,7 @@ export default function Dashboard() {
   if (statsLoading) {
     return (
       <div className="flex justify-center py-20">
-        <span className="loading loading-spinner loading-lg" />
+        <Spinner size="3" />
       </div>
     )
   }

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import type { CheckedState } from '@radix-ui/react-checkbox'
-import { Badge, Button, LabelledCheckbox } from '@swedev/ui'
+import { Link as RadixLink, Spinner } from '@radix-ui/themes'
+import { Badge, Button, Callout, LabelledCheckbox, Table } from '@swedev/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ChevronDown,
@@ -11,7 +12,6 @@ import {
   Inbox as InboxIcon,
   RotateCw,
   Trash2,
-  XCircle,
 } from 'lucide-react'
 import {
   deleteFileByPath,
@@ -88,16 +88,12 @@ export default function Inbox() {
         const summary = parts.length > 0 ? parts.join(', ') : 'inga filer hittades'
         const semantic = d.new > 0 ? 'success' : d.unreadable > 0 ? 'warning' : 'info';
         return (
-          <div className={`alert alert-sm alert-${semantic}`}>
-            <span className="flex-1">{d.scanned} skannade — {summary}</span>
-            <Button
-              semantic={semantic as any}
-              size="2"
-              className="ml-auto"
-              onClick={() => scanMutation.reset()}
-              icon={<XCircle />}
-            />
-          </div>
+          <Callout
+            semantic={semantic as any}
+            message={`${d.scanned} skannade — ${summary}`}
+            dismissible
+            onDismiss={() => scanMutation.reset()}
+          />
         )
       })()}
 
@@ -110,7 +106,7 @@ export default function Inbox() {
         {pendingLoading
           ? (
               <div className="flex justify-center py-8">
-                <span className="loading loading-spinner" />
+                <Spinner size="2" />
               </div>
             )
           : pendingFiles.length === 0
@@ -123,43 +119,44 @@ export default function Inbox() {
             : (
                 <div className="bg-base-100 rounded-xl shadow-sm overflow-hidden">
                   <div className="overflow-x-auto">
-                    <table className="table table-sm">
-                      <thead>
-                        <tr>
-                          <th className="tabular-nums text-base-content/40 w-12">ID</th>
-                          <th>Sökväg</th>
-                          <th>Typ</th>
-                          <th className="text-right">Storlek</th>
-                          <th>Registrerad</th>
-                        </tr>
-                      </thead>
-                      <tbody>
+                    <Table.Root size="2">
+                      <Table.Header>
+                        <Table.Row>
+                          <Table.ColumnHeaderCell className="tabular-nums text-base-content/40 w-12">ID</Table.ColumnHeaderCell>
+                          <Table.ColumnHeaderCell>Sökväg</Table.ColumnHeaderCell>
+                          <Table.ColumnHeaderCell>Typ</Table.ColumnHeaderCell>
+                          <Table.ColumnHeaderCell justify="end">Storlek</Table.ColumnHeaderCell>
+                          <Table.ColumnHeaderCell>Registrerad</Table.ColumnHeaderCell>
+                        </Table.Row>
+                      </Table.Header>
+                      <Table.Body>
                         {pendingFiles.map((f) => (
-                          <tr key={f.id}>
-                            <td className="tabular-nums text-base-content/40">{f.id}</td>
-                            <td>
-                              <a
-                                href={`/api/files/${f.id}/view`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="link link-hover link-primary text-xs font-mono"
-                              >
-                                {f.filepath}
-                              </a>
-                            </td>
-                            <td className="text-xs">
+                          <Table.Row key={f.id}>
+                            <Table.Cell className="tabular-nums text-base-content/40">{f.id}</Table.Cell>
+                            <Table.Cell>
+                              <RadixLink underline="hover" size="1" className="font-mono" asChild>
+                                <a
+                                  href={`/api/files/${f.id}/view`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  {f.filepath}
+                                </a>
+                              </RadixLink>
+                            </Table.Cell>
+                            <Table.Cell className="text-xs">
                               {f.mime_type?.split('/').pop() ?? '—'}
-                            </td>
-                            <td className="text-right tabular-nums">
+                            </Table.Cell>
+                            <Table.Cell justify="end" className="tabular-nums">
                               {f.file_size !== null ? formatSize(f.file_size) : '—'}
-                            </td>
-                            <td className="tabular-nums">
+                            </Table.Cell>
+                            <Table.Cell className="tabular-nums">
                               {f.created_at?.split('T')[0] ?? '—'}
-                            </td>
-                          </tr>
+                            </Table.Cell>
+                          </Table.Row>
                         ))}
-                      </tbody>
-                    </table>
+                      </Table.Body>
+                    </Table.Root>
                   </div>
                 </div>
               )}
@@ -184,7 +181,7 @@ export default function Inbox() {
         {treeLoading
           ? (
               <div className="flex justify-center py-8">
-                <span className="loading loading-spinner" />
+                <Spinner size="2" />
               </div>
             )
           : treeData?.tree

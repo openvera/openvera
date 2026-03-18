@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Archive,
   Check,
@@ -13,7 +13,6 @@ import {
   Unlink,
   X,
 } from 'lucide-react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import {
   archiveDocument,
@@ -22,23 +21,24 @@ import {
   reviewDocument,
   updateDocument,
 } from '../api/documents'
-import { label } from '../labels'
 import { createMatch, unmatch } from '../api/matches'
 import { searchTransactions, type TransactionSearchResult } from '../api/transactions'
+import { label } from '../labels'
 
 interface Props {
-  docId: number | null
-  onClose: () => void
+  docId: number | null;
+  onClose: () => void;
   /** Called after any mutation so parent can invalidate its own queries */
-  onUpdated?: () => void
+  onUpdated?: () => void;
 }
 
 export default function DocumentDetailModal({ docId, onClose, onUpdated }: Props) {
   const queryClient = useQueryClient()
   const dialogRef = useRef<HTMLDialogElement>(null)
-  const [editing, setEditing] = useState(false)
+  const [editingDocId, setEditingDocId] = useState<number | null>(null)
 
   const open = docId !== null
+  const editing = docId !== null && editingDocId === docId
 
   useEffect(() => {
     const dialog = dialogRef.current
@@ -46,10 +46,6 @@ export default function DocumentDetailModal({ docId, onClose, onUpdated }: Props
     if (open && !dialog.open) dialog.showModal()
     if (!open && dialog.open) dialog.close()
   }, [open])
-
-  useEffect(() => {
-    setEditing(false)
-  }, [docId])
 
   const { data: detail, isLoading } = useQuery({
     queryKey: ['document-detail', docId],
@@ -66,7 +62,7 @@ export default function DocumentDetailModal({ docId, onClose, onUpdated }: Props
     mutationFn: (data: Record<string, unknown>) =>
       updateDocument(docId!, data),
     onSuccess: () => {
-      setEditing(false)
+      setEditingDocId(null)
       invalidate()
     },
   })
@@ -116,14 +112,17 @@ export default function DocumentDetailModal({ docId, onClose, onUpdated }: Props
               {doc && !editing && (
                 <button
                   className="btn btn-ghost btn-sm btn-square"
-                  onClick={() => setEditing(true)}
+                  onClick={() => setEditingDocId(docId)}
                 >
                   <Pencil className="w-4 h-4" />
                 </button>
               )}
               <button
                 className="btn btn-ghost btn-sm btn-square"
-                onClick={() => { setEditing(false); onClose() }}
+                onClick={() => {
+                  setEditingDocId(null)
+                  onClose()
+                }}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -142,7 +141,7 @@ export default function DocumentDetailModal({ docId, onClose, onUpdated }: Props
                     doc={doc}
                     parties={doc.parties ?? []}
                     onSave={(data) => saveMutation.mutate(data)}
-                    onCancel={() => setEditing(false)}
+                    onCancel={() => setEditingDocId(null)}
                     isPending={saveMutation.isPending}
                   />
                 )
@@ -192,12 +191,12 @@ export default function DocumentDetailModal({ docId, onClose, onUpdated }: Props
                             <Field
                               label="Belopp"
                               value={
-                                doc.amount != null
+                                doc.amount !== null && doc.amount !== undefined
                                   ? `${Number(doc.amount).toLocaleString('sv-SE', { minimumFractionDigits: 2 })} ${doc.currency ?? 'SEK'}`
                                   : null
                               }
                             />
-                            {doc.net_amount != null && doc.vat_amount != null && (
+                            {doc.net_amount !== null && doc.net_amount !== undefined && doc.vat_amount !== null && doc.vat_amount !== undefined && (
                               <>
                                 <Field
                                   label="Netto (exkl. moms)"
@@ -302,14 +301,14 @@ export default function DocumentDetailModal({ docId, onClose, onUpdated }: Props
                                 <Field
                                   label="Belopp"
                                   value={
-                                    mt.amount != null
+                                    mt.amount !== null && mt.amount !== undefined
                                       ? `${Number(mt.amount).toLocaleString('sv-SE', { minimumFractionDigits: 2 })} kr`
                                       : null
                                   }
                                 />
                                 <Field label="Konto" value={mt.account} />
                               </div>
-                              {mt.confidence != null && (
+                              {mt.confidence !== null && mt.confidence !== undefined && (
                                 <p className="text-xs text-base-content/40">
                                   Matchning: {mt.match_type} ({Math.round(mt.confidence)}%)
                                 </p>
@@ -392,16 +391,16 @@ function EditDocumentForm({
   onCancel,
   isPending,
 }: {
-  doc: any
-  parties: { id: number; name: string }[]
-  onSave: (data: Record<string, unknown>) => void
-  onCancel: () => void
-  isPending: boolean
+  doc: any;
+  parties: { id: number; name: string }[];
+  onSave: (data: Record<string, unknown>) => void;
+  onCancel: () => void;
+  isPending: boolean;
 }) {
   const [partyId, setPartyId] = useState<string>(
-    doc.party_id != null ? String(doc.party_id) : '',
+    doc.party_id !== null && doc.party_id !== undefined ? String(doc.party_id) : '',
   )
-  const [amount, setAmount] = useState(doc.amount != null ? String(doc.amount) : '')
+  const [amount, setAmount] = useState(doc.amount !== null && doc.amount !== undefined ? String(doc.amount) : '')
   const [currency, setCurrency] = useState(doc.currency ?? 'SEK')
   const [docDate, setDocDate] = useState(doc.doc_date ?? '')
   const [dueDate, setDueDate] = useState(doc.due_date ?? '')
@@ -409,13 +408,13 @@ function EditDocumentForm({
   const [ocrNumber, setOcrNumber] = useState(doc.ocr_number ?? '')
   const [docType, setDocType] = useState(doc.doc_type ?? 'invoice')
   const [notes, setNotes] = useState(doc.notes ?? '')
-  const [netAmount, setNetAmount] = useState(doc.net_amount != null ? String(doc.net_amount) : '')
-  const [vatAmount, setVatAmount] = useState(doc.vat_amount != null ? String(doc.vat_amount) : '')
+  const [netAmount, setNetAmount] = useState(doc.net_amount !== null && doc.net_amount !== undefined ? String(doc.net_amount) : '')
+  const [vatAmount, setVatAmount] = useState(doc.vat_amount !== null && doc.vat_amount !== undefined ? String(doc.vat_amount) : '')
   const [breakdown, setBreakdown] = useState<{ rate: string; net: string; vat: string }[]>(
     doc.vat_breakdown?.map((e: any) => ({ rate: String(e.rate), net: String(e.net), vat: String(e.vat) })) ?? [],
   )
   const matchable = label.isMatchable(docType)
-  const hasVatData = doc.vat_amount != null || doc.net_amount != null
+  const hasVatData = (doc.vat_amount !== null && doc.vat_amount !== undefined) || (doc.net_amount !== null && doc.net_amount !== undefined)
 
   const handleSave = () => {
     const data: Record<string, unknown> = {
@@ -607,45 +606,45 @@ function EditDocumentForm({
                         ? (Number(row.net) * Number(row.rate) / 100).toFixed(2)
                         : ''
                       return (
-                      <tr key={i}>
-                        <td>
-                          <input
-                            className="input input-bordered input-xs w-20"
-                            type="number"
-                            step="any"
-                            value={row.rate}
-                            onChange={(e) => {
-                              const next = [...breakdown]
-                              next[i] = { ...row, rate: e.target.value, vat: '' }
-                              setBreakdown(next)
-                            }}
-                          />
-                        </td>
-                        <td>
-                          <input
-                            className="input input-bordered input-xs w-28"
-                            type="number"
-                            step="0.01"
-                            value={row.net}
-                            onChange={(e) => {
-                              const next = [...breakdown]
-                              next[i] = { ...row, net: e.target.value, vat: '' }
-                              setBreakdown(next)
-                            }}
-                          />
-                        </td>
-                        <td className="tabular-nums text-sm text-base-content/70">
-                          {computedVat}
-                        </td>
-                        <td>
-                          <button
-                            className="btn btn-ghost btn-xs text-error"
-                            onClick={() => setBreakdown(breakdown.filter((_, j) => j !== i))}
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        </td>
-                      </tr>
+                        <tr key={i}>
+                          <td>
+                            <input
+                              className="input input-bordered input-xs w-20"
+                              type="number"
+                              step="any"
+                              value={row.rate}
+                              onChange={(e) => {
+                                const next = [...breakdown]
+                                next[i] = { ...row, rate: e.target.value, vat: '' }
+                                setBreakdown(next)
+                              }}
+                            />
+                          </td>
+                          <td>
+                            <input
+                              className="input input-bordered input-xs w-28"
+                              type="number"
+                              step="0.01"
+                              value={row.net}
+                              onChange={(e) => {
+                                const next = [...breakdown]
+                                next[i] = { ...row, net: e.target.value, vat: '' }
+                                setBreakdown(next)
+                              }}
+                            />
+                          </td>
+                          <td className="tabular-nums text-sm text-base-content/70">
+                            {computedVat}
+                          </td>
+                          <td>
+                            <button
+                              className="btn btn-ghost btn-xs text-error"
+                              onClick={() => setBreakdown(breakdown.filter((_, j) => j !== i))}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </td>
+                        </tr>
                       )
                     })}
                   </tbody>
@@ -684,8 +683,8 @@ function MatchTransactionSection({
   doc,
   onMatched,
 }: {
-  doc: any
-  onMatched: () => void
+  doc: any;
+  onMatched: () => void;
 }) {
   const [searchQuery, setSearchQuery] = useState('')
   const [candidates, setCandidates] = useState<TransactionSearchResult[]>([])
@@ -702,7 +701,7 @@ function MatchTransactionSection({
     },
   })
 
-  const doSearch = async (q?: string) => {
+  const doSearch = useCallback(async (q?: string) => {
     setIsSearching(true)
     try {
       const results = await searchTransactions({
@@ -717,15 +716,14 @@ function MatchTransactionSection({
     } finally {
       setIsSearching(false)
     }
-  }
+  }, [doc.amount, doc.company_id, doc.doc_date, doc.doc_type])
 
   // Auto-search on mount if we have an amount
   useEffect(() => {
-    if (doc.amount != null) {
-      doSearch()
+    if (doc.amount !== null && doc.amount !== undefined) {
+      void doSearch()
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [doc.id])
+  }, [doc.amount, doSearch])
 
   return (
     <div className="space-y-2">
@@ -823,8 +821,8 @@ function Field({
   label: lbl,
   value,
 }: {
-  label: string
-  value: string | null | undefined
+  label: string;
+  value: string | null | undefined;
 }) {
   return (
     <div>

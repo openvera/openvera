@@ -1,7 +1,8 @@
 import type { ChangeEvent, MouseEvent } from 'react'
 import { useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
-import { Badge, Button, Select, type Semantic, TextArea, TextField } from '@swedev/ui'
+import { Link as RadixLink, Spinner } from '@radix-ui/themes'
+import { Badge, Button, Select, type Semantic, Table, TextArea, TextField } from '@swedev/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Pencil, Plus, Trash2 } from 'lucide-react'
 import {
@@ -119,7 +120,7 @@ export default function PartyDetail() {
   if (isLoading || !party) {
     return (
       <div className="flex justify-center py-20">
-        <span className="loading loading-spinner loading-lg" />
+        <Spinner size="3" />
       </div>
     )
   }
@@ -264,54 +265,56 @@ export default function PartyDetail() {
             )
           : (
               <div className="overflow-x-auto">
-                <table className="table table-sm">
-                  <thead>
-                    <tr>
-                      <th className="tabular-nums text-base-content/40 w-12">ID</th>
-                      <th>Datum</th>
-                      <th>Referens</th>
-                      <th className="text-right">Belopp</th>
-                      <th>Konto</th>
-                      <th>Företag</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                <Table.Root size="2">
+                  <Table.Header>
+                    <Table.Row>
+                      <Table.ColumnHeaderCell className="tabular-nums text-base-content/40 w-12">ID</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Datum</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Referens</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell justify="end">Belopp</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Konto</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Företag</Table.ColumnHeaderCell>
+                    </Table.Row>
+                  </Table.Header>
+                  <Table.Body>
                     {transactions.map((t) => (
-                      <tr
+                      <Table.Row
                         key={t.id}
-                        className="hover cursor-pointer"
+                        className="cursor-pointer"
                         onClick={() => navigate(`/transactions/${t.id}`)}
                       >
-                        <td className="tabular-nums text-base-content/40">{t.id}</td>
-                        <td className="tabular-nums">
+                        <Table.Cell className="tabular-nums text-base-content/40">{t.id}</Table.Cell>
+                        <Table.Cell className="tabular-nums">
                           {t.date}
-                        </td>
-                        <td className="truncate max-w-xs">{t.reference}</td>
-                        <td className="text-right">
+                        </Table.Cell>
+                        <Table.Cell className="truncate max-w-xs">{t.reference}</Table.Cell>
+                        <Table.Cell justify="end">
                           <AmountCell amount={t.amount} />
-                        </td>
-                        <td>
-                          <Link
-                            to={`/transactions?account=${t.account_id}`}
-                            className="link link-hover link-primary text-sm"
-                            onClick={(e: MouseEvent) => e.stopPropagation()}
-                          >
-                            {t.account}
-                          </Link>
-                        </td>
-                        <td>
-                          <Link
-                            to={`/settings?company=${t.company_slug}`}
-                            className="link link-hover link-primary text-sm"
-                            onClick={(e: MouseEvent) => e.stopPropagation()}
-                          >
-                            {t.company}
-                          </Link>
-                        </td>
-                      </tr>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <RadixLink underline="hover" size="2" asChild>
+                            <Link
+                              to={`/transactions?account=${t.account_id}`}
+                              onClick={(e: MouseEvent) => e.stopPropagation()}
+                            >
+                              {t.account}
+                            </Link>
+                          </RadixLink>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <RadixLink underline="hover" size="2" asChild>
+                            <Link
+                              to={`/settings?company=${t.company_slug}`}
+                              onClick={(e: MouseEvent) => e.stopPropagation()}
+                            >
+                              {t.company}
+                            </Link>
+                          </RadixLink>
+                        </Table.Cell>
+                      </Table.Row>
                     ))}
-                  </tbody>
-                </table>
+                  </Table.Body>
+                </Table.Root>
               </div>
             )}
       </div>

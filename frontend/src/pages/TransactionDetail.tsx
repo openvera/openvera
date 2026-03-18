@@ -1,6 +1,7 @@
 import { type ChangeEvent, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import type { CheckedState } from '@radix-ui/react-checkbox'
+import { Link as RadixLink, Spinner } from '@radix-ui/themes'
 import { Badge, Button, LabelledCheckbox, Select, TextArea } from '@swedev/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, CheckCircle, Link as LinkIcon, Pencil, RefreshCw, Trash2, XCircle } from 'lucide-react'
@@ -67,7 +68,7 @@ export default function TransactionDetail() {
   if (isLoading || !txn) {
     return (
       <div className="flex justify-center py-20">
-        <span className="loading loading-spinner loading-lg" />
+        <Spinner size="3" />
       </div>
     )
   }
@@ -157,12 +158,11 @@ export default function TransactionDetail() {
             <dd>
               {txn.account_name
                 ? (
-                    <Link
-                      to={`/transactions?account=${txn.account_id}`}
-                      className="link link-hover link-primary text-sm"
-                    >
-                      {txn.account_name}
-                    </Link>
+                    <RadixLink underline="hover" size="2" asChild>
+                      <Link to={`/transactions?account=${txn.account_id}`}>
+                        {txn.account_name}
+                      </Link>
+                    </RadixLink>
                   )
                 : (
                     '—'
@@ -173,12 +173,11 @@ export default function TransactionDetail() {
             <dd>
               {txn.company_name
                 ? (
-                    <Link
-                      to={`/settings?company=${txn.company_slug}`}
-                      className="link link-hover link-primary text-sm"
-                    >
-                      {txn.company_name}
-                    </Link>
+                    <RadixLink underline="hover" size="2" asChild>
+                      <Link to={`/settings?company=${txn.company_slug}`}>
+                        {txn.company_name}
+                      </Link>
+                    </RadixLink>
                   )
                 : (
                     '—'

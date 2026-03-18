@@ -1,6 +1,7 @@
-import { type ChangeEvent, useEffect, useMemo, useRef, useState } from 'react'
+import { type ChangeEvent, type MouseEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
-import { Badge, Button, Checkbox, Select, type Semantic, TextField } from '@swedev/ui'
+import { Link as RadixLink, Spinner } from '@radix-ui/themes'
+import { Badge, Button, Checkbox, Select, type Semantic, Table, TextField } from '@swedev/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Archive, Check, Search, Trash2 } from 'lucide-react'
 import {
@@ -210,7 +211,7 @@ export default function Documents() {
   if (isLoading) {
     return (
       <div className="flex justify-center py-20">
-        <span className="loading loading-spinner loading-lg" />
+        <Spinner size="3" />
       </div>
     )
   }
@@ -337,81 +338,83 @@ export default function Documents() {
         : (
             <div className="bg-base-100 rounded-xl shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="table table-sm w-max min-w-full">
-                  <thead>
-                    <tr>
-                      <th className="w-8">
+                <Table.Root size="2" className="w-max min-w-full">
+                  <Table.Header>
+                    <Table.Row>
+                      <Table.ColumnHeaderCell className="w-8">
                         <Checkbox size="2" checked={allSelected} onCheckedChange={() => toggleAll()} />
-                      </th>
-                      <th className="tabular-nums text-base-content/40 w-12">ID</th>
-                      <th>Fil</th>
-                      <th>Part</th>
-                      <th className="text-right">Belopp</th>
-                      <th className="text-right">Kurs</th>
-                      <th className="text-right">SEK</th>
-                      <th className="text-right">Moms</th>
-                      <th>Datum</th>
-                      <th>Typ</th>
-                      <th>Status</th>
-                      <th>Åtgärder</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                      </Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell className="tabular-nums text-base-content/40 w-12">ID</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Fil</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Part</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell justify="end">Belopp</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell justify="end">Kurs</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell justify="end">SEK</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell justify="end">Moms</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Datum</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Typ</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Status</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Åtgärder</Table.ColumnHeaderCell>
+                    </Table.Row>
+                  </Table.Header>
+                  <Table.Body>
                     {filtered.map((doc) => (
-                      <tr
+                      <Table.Row
                         key={doc.id}
-                        className={`hover cursor-pointer ${selectedIds.has(doc.id) ? 'bg-primary/5' : ''}`}
+                        className={`cursor-pointer ${selectedIds.has(doc.id) ? 'bg-primary/5' : ''}`}
                         onClick={() => setDetailId(doc.id)}
                       >
-                        <td onClick={(e) => e.stopPropagation()}>
+                        <Table.Cell onClick={(e: MouseEvent<HTMLTableDataCellElement>) => e.stopPropagation()}>
                           <Checkbox size="2" checked={selectedIds.has(doc.id)} onCheckedChange={() => toggleOne(doc.id)} />
-                        </td>
-                        <td className="tabular-nums text-base-content/40">{doc.id}</td>
-                        <td className="text-xs max-w-48 truncate">
+                        </Table.Cell>
+                        <Table.Cell className="tabular-nums text-base-content/40">{doc.id}</Table.Cell>
+                        <Table.Cell className="text-xs max-w-48 truncate">
                           {doc.file_id && doc.filename
                             ? (
-                                <a
-                                  href={`/api/files/${doc.file_id}/view`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="link link-hover link-primary font-mono"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  {doc.filename}
-                                </a>
+                                <RadixLink underline="hover" size="1" className="font-mono" asChild>
+                                  <a
+                                    href={`/api/files/${doc.file_id}/view`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    {doc.filename}
+                                  </a>
+                                </RadixLink>
                               )
                             : '—'}
-                        </td>
-                        <td className="font-medium max-w-28 truncate">
+                        </Table.Cell>
+                        <Table.Cell className="font-medium max-w-28 truncate">
                           {doc.party_id
                             ? (
-                                <Link
-                                  to={`/parties/${doc.party_id}`}
-                                  className="link link-hover link-primary"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  {doc.party_name}
-                                </Link>
+                                <RadixLink underline="hover" asChild>
+                                  <Link
+                                    to={`/parties/${doc.party_id}`}
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    {doc.party_name}
+                                  </Link>
+                                </RadixLink>
                               )
                             : '—'}
-                        </td>
-                        <td className="text-right">
+                        </Table.Cell>
+                        <Table.Cell justify="end">
                           <AmountCell
                             amount={doc.amount_sek ?? doc.amount}
                             currency={doc.currency ?? 'SEK'}
                           />
-                        </td>
-                        <td className="text-right tabular-nums text-nowrap">
+                        </Table.Cell>
+                        <Table.Cell justify="end" className="tabular-nums text-nowrap">
                           {doc.currency && doc.currency !== 'SEK' && doc.matched_txn_amount !== null && doc.amount
                             ? (Math.abs(doc.matched_txn_amount) / Math.abs(doc.amount)).toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                             : ''}
-                        </td>
-                        <td className="text-right tabular-nums text-nowrap">
+                        </Table.Cell>
+                        <Table.Cell justify="end" className="tabular-nums text-nowrap">
                           {doc.currency && doc.currency !== 'SEK' && doc.matched_txn_amount !== null
                             ? `${Math.abs(doc.matched_txn_amount).toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kr`
                             : ''}
-                        </td>
-                        <td className="text-right tabular-nums text-nowrap">
+                        </Table.Cell>
+                        <Table.Cell justify="end" className="tabular-nums text-nowrap">
                           {doc.vat_amount !== null && doc.vat_amount !== 0 && (
                             <span>
                               {Math.abs(doc.vat_amount).toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -423,19 +426,19 @@ export default function Documents() {
                               )}
                             </span>
                           )}
-                        </td>
-                        <td className="tabular-nums text-nowrap">
+                        </Table.Cell>
+                        <Table.Cell className="tabular-nums text-nowrap">
                           <DateCell date={doc.doc_date} />
-                        </td>
-                        <td>
+                        </Table.Cell>
+                        <Table.Cell>
                           <Badge
                             semantic={docTypeSemantic[doc.doc_type] ?? 'neutral'}
                             className="max-w-28 truncate"
                             title={label.docType(doc.doc_type)}
                             text={label.docType(doc.doc_type)}
                           />
-                        </td>
-                        <td className="text-nowrap">
+                        </Table.Cell>
+                        <Table.Cell className="text-nowrap">
                           <StatusBadge
                             matched={!!doc.is_matched}
                             reviewed={!!doc.reviewed_at}
@@ -443,8 +446,8 @@ export default function Documents() {
                             confidence={doc.match_confidence}
                             docType={doc.doc_type}
                           />
-                        </td>
-                        <td>
+                        </Table.Cell>
+                        <Table.Cell>
                           <div
                             className="flex gap-0.5"
                             onClick={(e) => e.stopPropagation()}
@@ -485,11 +488,11 @@ export default function Documents() {
                               icon={<Trash2 />}
                             />
                           </div>
-                        </td>
-                      </tr>
+                        </Table.Cell>
+                      </Table.Row>
                     ))}
-                  </tbody>
-                </table>
+                  </Table.Body>
+                </Table.Root>
               </div>
             </div>
           )}

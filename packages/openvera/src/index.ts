@@ -1,6 +1,6 @@
 // Config & Provider
-export { OpenVeraProvider } from './OpenVeraProvider'
 export { configure } from './config'
+export { OpenVeraProvider } from './OpenVeraProvider'
 
 // Types
 export * from './types'

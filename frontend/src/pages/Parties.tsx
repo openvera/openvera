@@ -1,6 +1,7 @@
 import { type ChangeEvent, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { Badge, Button, Select, type Semantic, TextArea, TextField } from '@swedev/ui'
+import { Spinner } from '@radix-ui/themes'
+import { Badge, Button, Select, type Semantic, Table, TextArea, TextField } from '@swedev/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link as LinkIcon, Pencil, Plus, Unlink } from 'lucide-react'
 import {
@@ -104,7 +105,7 @@ export default function Parties() {
   if (isLoading) {
     return (
       <div className="flex justify-center py-20">
-        <span className="loading loading-spinner loading-lg" />
+        <Spinner size="3" />
       </div>
     )
   }
@@ -145,41 +146,41 @@ export default function Parties() {
         : (
             <div className="bg-base-100 rounded-xl shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="table table-sm">
-                  <thead>
-                    <tr>
-                      <th className="tabular-nums text-base-content/40 w-12">ID</th>
-                      <th>Namn</th>
-                      <th>Typ</th>
-                      <th>Relation</th>
-                      <th>Mönster</th>
-                      <th>Kontokod</th>
-                      <th>Åtgärder</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                <Table.Root size="2">
+                  <Table.Header>
+                    <Table.Row>
+                      <Table.ColumnHeaderCell className="tabular-nums text-base-content/40 w-12">ID</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Namn</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Typ</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Relation</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Mönster</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Kontokod</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Åtgärder</Table.ColumnHeaderCell>
+                    </Table.Row>
+                  </Table.Header>
+                  <Table.Body>
                     {parties.map((party) => (
-                      <tr
+                      <Table.Row
                         key={party.id}
-                        className="hover cursor-pointer"
+                        className="cursor-pointer"
                         onClick={() => navigate(`/parties/${party.id}`)}
                       >
-                        <td className="tabular-nums text-base-content/40">{party.id}</td>
-                        <td className="font-medium">{party.name}</td>
-                        <td>
+                        <Table.Cell className="tabular-nums text-base-content/40">{party.id}</Table.Cell>
+                        <Table.Cell className="font-medium">{party.name}</Table.Cell>
+                        <Table.Cell>
                           <Badge semantic={entitySemantic[party.entity_type] ?? 'neutral'} text={label.entityType(party.entity_type)} />
-                        </td>
-                        <td>
+                        </Table.Cell>
+                        <Table.Cell>
                           <Badge semantic="neutral" text={label.relationship(party.relationship)} />
-                        </td>
-                        <td className="text-xs">
+                        </Table.Cell>
+                        <Table.Cell className="text-xs">
                           {party.patterns.length > 0
                             ? party.patterns.slice(0, 3).join(', ')
                             : '—'}
                           {party.patterns.length > 3 &&
                             ` +${party.patterns.length - 3}`}
-                        </td>
-                        <td className="tabular-nums">
+                        </Table.Cell>
+                        <Table.Cell className="tabular-nums">
                           {party.default_code
                             ? (
                                 <>
@@ -194,8 +195,8 @@ export default function Parties() {
                                 </>
                               )
                             : '—'}
-                        </td>
-                        <td>
+                        </Table.Cell>
+                        <Table.Cell>
                           <div
                             className="flex gap-0.5"
                             onClick={(e) => e.stopPropagation()}
@@ -218,11 +219,11 @@ export default function Parties() {
                               icon={<Unlink />}
                             />
                           </div>
-                        </td>
-                      </tr>
+                        </Table.Cell>
+                      </Table.Row>
                     ))}
-                  </tbody>
-                </table>
+                  </Table.Body>
+                </Table.Root>
               </div>
             </div>
           )}

@@ -14,15 +14,18 @@ import tseslint from 'typescript-eslint'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-const gitignorePath = path.resolve(__dirname, '..', '.gitignore')
+const gitignorePath = path.resolve(__dirname, '.gitignore')
+const frontendFiles = ['frontend/**/*.{js,mjs,cjs,ts,jsx,tsx}']
+const openveraFiles = ['packages/openvera/**/*.{js,mjs,cjs,ts,jsx,tsx}']
+const openveraSrcFiles = ['packages/openvera/src/**/*.{js,mjs,cjs,ts,jsx,tsx}']
+const reactFiles = ['frontend/**/*.{jsx,tsx}', 'packages/openvera/src/**/*.{jsx,tsx}']
 
 export default tseslint.config([
   includeIgnoreFile(gitignorePath),
-  { ignores: ['dist/'] },
+  { ignores: ['**/dist/**'] },
 
-  // Base
   {
-    files: ['**/*.{js,mjs,cjs,ts,jsx,tsx}'],
+    files: [...frontendFiles, ...openveraFiles],
     languageOptions: {
       ecmaVersion: 2022,
       globals: {
@@ -38,9 +41,8 @@ export default tseslint.config([
     },
   },
 
-  // TypeScript
   {
-    files: ['**/*.{ts,tsx}'],
+    files: ['frontend/**/*.{ts,tsx}', 'packages/openvera/**/*.{ts,tsx}'],
     plugins: {
       '@typescript-eslint': tseslint.plugin,
     },
@@ -58,6 +60,7 @@ export default tseslint.config([
         fixStyle: 'separate-type-imports',
       }],
       '@typescript-eslint/no-import-type-side-effects': 'error',
+      'no-undef': 'off',
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': [
         'error',
@@ -74,9 +77,8 @@ export default tseslint.config([
     },
   },
 
-  // React
   {
-    files: ['**/*.{jsx,tsx}'],
+    files: reactFiles,
     plugins: {
       'react': reactPlugin,
       'react-hooks': reactHooksPlugin,
@@ -94,15 +96,13 @@ export default tseslint.config([
     rules: {
       ...reactPlugin.configs.recommended.rules,
       ...reactHooksPlugin.configs.recommended.rules,
-      // Not needed with React 19 automatic JSX runtime
       'react/react-in-jsx-scope': 'off',
       'react/jsx-tag-spacing': 'off',
     },
   },
 
-  // Stylistic
   {
-    files: ['**/*.{js,mjs,cjs,ts,jsx,tsx}'],
+    files: [...frontendFiles, ...openveraFiles],
     plugins: {
       '@stylistic': stylisticPlugin,
     },
@@ -189,9 +189,8 @@ export default tseslint.config([
     },
   },
 
-  // Import-x
   {
-    files: ['**/*.{js,mjs,cjs,ts,jsx,tsx}'],
+    files: [...frontendFiles, ...openveraFiles],
     plugins: {
       'import-x': importXPlugin,
     },
@@ -205,6 +204,13 @@ export default tseslint.config([
       'import-x/resolver-next': [
         createTypeScriptImportResolver({
           alwaysTryTypes: true,
+          noWarnOnMultipleProjects: true,
+          project: [
+            './frontend/tsconfig.app.json',
+            './frontend/tsconfig.node.json',
+            './packages/openvera/tsconfig.app.json',
+            './packages/openvera/tsconfig.node.json',
+          ],
         }),
       ],
     },
@@ -227,9 +233,8 @@ export default tseslint.config([
     },
   },
 
-  // Simple import sort
   {
-    files: ['**/*.{js,mjs,cjs,ts,jsx,tsx}'],
+    files: [...frontendFiles, ...openveraFiles],
     plugins: {
       'simple-import-sort': simpleImportSortPlugin,
     },
@@ -238,17 +243,11 @@ export default tseslint.config([
         'error',
         {
           groups: [
-            // Node built-ins
             ['^node:'],
-            // React, then third-party packages
             ['^react', '^@?\\w'],
-            // Internal aliases (src/)
             ['^@/'],
-            // Parent imports
             ['^\\.\\.'],
-            // Sibling imports
             ['^\\.'],
-            // Style imports last
             ['\\.css$'],
           ],
         },

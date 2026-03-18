@@ -2,11 +2,11 @@ import { useEffect, useRef } from 'react'
 import { X } from 'lucide-react'
 
 interface Props {
-  open: boolean
-  title: string
-  onClose: () => void
-  children: React.ReactNode
-  footer: React.ReactNode
+  open: boolean;
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+  footer: React.ReactNode;
 }
 
 export default function FormModal({ open, title, onClose, children, footer }: Props) {

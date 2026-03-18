@@ -1,6 +1,7 @@
-import { type ChangeEvent, useMemo, useState } from 'react'
+import { type ChangeEvent, type MouseEvent, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
-import { Badge, Button, Checkbox, Select, TextField } from '@swedev/ui'
+import { Spinner } from '@radix-ui/themes'
+import { Badge, Button, Checkbox, Select, Table, TextField } from '@swedev/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { RefreshCw, Search } from 'lucide-react'
 import {
@@ -137,7 +138,7 @@ export default function Transactions() {
   if (isLoading) {
     return (
       <div className="flex justify-center py-20">
-        <span className="loading loading-spinner loading-lg" />
+        <Spinner size="3" />
       </div>
     )
   }
@@ -254,54 +255,54 @@ export default function Transactions() {
         : (
             <div className="bg-base-100 rounded-xl shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="table table-sm">
-                  <thead>
-                    <tr>
-                      <th className="w-8">
+                <Table.Root size="2">
+                  <Table.Header>
+                    <Table.Row>
+                      <Table.ColumnHeaderCell className="w-8">
                         <Checkbox
                           size="2"
                           checked={allSelected}
                           onCheckedChange={() => toggleAll()}
                         />
-                      </th>
-                      <th className="tabular-nums text-base-content/40 w-12">ID</th>
-                      <th>Datum</th>
-                      <th>Referens</th>
-                      <th className="text-right">Belopp</th>
-                      <th>Konto</th>
-                      <th>Kontokod</th>
-                      <th>Underlag</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                      </Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell className="tabular-nums text-base-content/40 w-12">ID</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Datum</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Referens</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell justify="end">Belopp</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Konto</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Kontokod</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Underlag</Table.ColumnHeaderCell>
+                    </Table.Row>
+                  </Table.Header>
+                  <Table.Body>
                     {filtered.map((txn) => (
-                      <tr
+                      <Table.Row
                         key={txn.id}
-                        className={`hover cursor-pointer ${selectedIds.has(txn.id) ? 'bg-primary/5' : ''}`}
+                        className={`cursor-pointer ${selectedIds.has(txn.id) ? 'bg-primary/5' : ''}`}
                         onClick={() => navigate(`/transactions/${txn.id}`)}
                       >
-                        <td onClick={(e) => e.stopPropagation()}>
+                        <Table.Cell onClick={(e: MouseEvent<HTMLTableDataCellElement>) => e.stopPropagation()}>
                           <Checkbox
                             size="2"
                             checked={selectedIds.has(txn.id)}
                             onCheckedChange={() => toggleOne(txn.id)}
                           />
-                        </td>
-                        <td className="tabular-nums text-base-content/40">{txn.id}</td>
-                        <td className="tabular-nums">
+                        </Table.Cell>
+                        <Table.Cell className="tabular-nums text-base-content/40">{txn.id}</Table.Cell>
+                        <Table.Cell className="tabular-nums">
                           <DateCell date={txn.date} />
-                        </td>
-                        <td className="max-w-xs truncate font-medium">
+                        </Table.Cell>
+                        <Table.Cell className="max-w-xs truncate font-medium">
                           {txn.reference}
-                        </td>
-                        <td className="text-right">
+                        </Table.Cell>
+                        <Table.Cell justify="end">
                           <AmountCell amount={txn.amount} />
-                        </td>
-                        <td>{txn.account_name}</td>
-                        <td className="tabular-nums">
+                        </Table.Cell>
+                        <Table.Cell>{txn.account_name}</Table.Cell>
+                        <Table.Cell className="tabular-nums">
                           {txn.accounting_code || '—'}
-                        </td>
-                        <td>
+                        </Table.Cell>
+                        <Table.Cell>
                           {txn.is_internal_transfer
                             ? (
                                 <Badge semantic="neutral">
@@ -320,11 +321,11 @@ export default function Transactions() {
                                     confidence={txn.match_confidence}
                                   />
                                 )}
-                        </td>
-                      </tr>
+                        </Table.Cell>
+                      </Table.Row>
                     ))}
-                  </tbody>
-                </table>
+                  </Table.Body>
+                </Table.Root>
               </div>
             </div>
           )}

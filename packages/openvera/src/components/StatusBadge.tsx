@@ -1,10 +1,10 @@
+import { Badge } from '@swedev/ui'
 import {
   Archive,
   CheckCircle,
   Link,
   XCircle,
 } from 'lucide-react'
-import { Badge } from '@swedev/ui'
 
 import { label } from '../labels'
 

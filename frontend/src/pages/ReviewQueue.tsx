@@ -1,4 +1,5 @@
-import { Badge, Button } from '@swedev/ui'
+import { Spinner } from '@radix-ui/themes'
+import { Badge, Button, Table } from '@swedev/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowRight, CheckCircle, ClipboardCheck, PartyPopper, XCircle } from 'lucide-react'
 import {
@@ -65,7 +66,7 @@ export default function ReviewQueue() {
   if (isLoading) {
     return (
       <div className="flex justify-center py-20">
-        <span className="loading loading-spinner loading-lg" />
+        <Spinner size="3" />
       </div>
     )
   }
@@ -206,34 +207,34 @@ export default function ReviewQueue() {
           </h2>
           <div className="bg-base-100 rounded-xl shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="table table-sm">
-                <thead>
-                  <tr>
-                    <th className="tabular-nums text-base-content/40 w-12">ID</th>
-                    <th>Leverantör</th>
-                    <th className="text-right">Belopp</th>
-                    <th>Datum</th>
-                    <th>Typ</th>
-                    <th>Åtgärd</th>
-                  </tr>
-                </thead>
-                <tbody>
+              <Table.Root size="2">
+                <Table.Header>
+                  <Table.Row>
+                    <Table.ColumnHeaderCell className="tabular-nums text-base-content/40 w-12">ID</Table.ColumnHeaderCell>
+                    <Table.ColumnHeaderCell>Leverantör</Table.ColumnHeaderCell>
+                    <Table.ColumnHeaderCell justify="end">Belopp</Table.ColumnHeaderCell>
+                    <Table.ColumnHeaderCell>Datum</Table.ColumnHeaderCell>
+                    <Table.ColumnHeaderCell>Typ</Table.ColumnHeaderCell>
+                    <Table.ColumnHeaderCell>Åtgärd</Table.ColumnHeaderCell>
+                  </Table.Row>
+                </Table.Header>
+                <Table.Body>
                   {unreviewedDocs.map((doc) => (
-                    <tr key={doc.id} className="hover">
-                      <td className="tabular-nums text-base-content/40">{doc.id}</td>
-                      <td className="font-medium">
+                    <Table.Row key={doc.id}>
+                      <Table.Cell className="tabular-nums text-base-content/40">{doc.id}</Table.Cell>
+                      <Table.Cell className="font-medium">
                         {doc.party_name ?? '—'}
-                      </td>
-                      <td className="text-right">
+                      </Table.Cell>
+                      <Table.Cell justify="end">
                         <AmountCell amount={doc.amount_sek ?? doc.amount} />
-                      </td>
-                      <td className="tabular-nums">
+                      </Table.Cell>
+                      <Table.Cell className="tabular-nums">
                         <DateCell date={doc.doc_date} />
-                      </td>
-                      <td>
+                      </Table.Cell>
+                      <Table.Cell>
                         <Badge semantic="neutral" text={label.docType(doc.doc_type)} />
-                      </td>
-                      <td>
+                      </Table.Cell>
+                      <Table.Cell>
                         <Button
                           variant="ghost"
                           size="2"
@@ -242,11 +243,11 @@ export default function ReviewQueue() {
                           icon={<ClipboardCheck />}
                           text="Markera granskad"
                         />
-                      </td>
-                    </tr>
+                      </Table.Cell>
+                    </Table.Row>
                   ))}
-                </tbody>
-              </table>
+                </Table.Body>
+              </Table.Root>
             </div>
           </div>
         </section>

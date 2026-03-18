@@ -1,5 +1,5 @@
 import { type ChangeEvent, useRef, useState } from 'react'
-import { Button, Select, TextField } from '@swedev/ui'
+import { Button, Select, Table, TextField } from '@swedev/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import {
@@ -173,30 +173,30 @@ export default function Settings() {
 
         <div className="bg-base-100 rounded-xl shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="table table-sm">
-              <thead>
-                <tr>
-                  <th className="tabular-nums text-base-content/40 w-12">ID</th>
-                  <th>Namn</th>
-                  <th>Kontonummer</th>
-                  <th>Typ</th>
-                  <th>Valuta</th>
-                  <th>Åtgärder</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table.Root size="2">
+              <Table.Header>
+                <Table.Row>
+                  <Table.ColumnHeaderCell className="tabular-nums text-base-content/40 w-12">ID</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>Namn</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>Kontonummer</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>Typ</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>Valuta</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>Åtgärder</Table.ColumnHeaderCell>
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
                 {accounts.map((a) => (
-                  <tr key={a.id} className="hover">
-                    <td className="tabular-nums text-base-content/40">{a.id}</td>
-                    <td className="font-medium">{a.name}</td>
-                    <td className="tabular-nums">
+                  <Table.Row key={a.id}>
+                    <Table.Cell className="tabular-nums text-base-content/40">{a.id}</Table.Cell>
+                    <Table.Cell className="font-medium">{a.name}</Table.Cell>
+                    <Table.Cell className="tabular-nums">
                       {a.account_number ?? '—'}
-                    </td>
-                    <td>
+                    </Table.Cell>
+                    <Table.Cell>
                       {label.accountType(a.account_type)}
-                    </td>
-                    <td>{a.currency}</td>
-                    <td>
+                    </Table.Cell>
+                    <Table.Cell>{a.currency}</Table.Cell>
+                    <Table.Cell>
                       <div className="flex gap-0.5">
                         <Button
                           variant="ghost"
@@ -216,11 +216,11 @@ export default function Settings() {
                           icon={<Trash2 />}
                         />
                       </div>
-                    </td>
-                  </tr>
+                    </Table.Cell>
+                  </Table.Row>
                 ))}
-              </tbody>
-            </table>
+              </Table.Body>
+            </Table.Root>
           </div>
         </div>
       </section>
