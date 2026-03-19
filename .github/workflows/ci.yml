@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
     paths:
+      - 'package.json'
+      - 'package-lock.json'
       - 'app/**'
       - 'frontend/**'
       - 'packages/**'
@@ -11,6 +13,8 @@ on:
   pull_request:
     branches: [main]
     paths:
+      - 'package.json'
+      - 'package-lock.json'
       - 'app/**'
       - 'frontend/**'
       - 'packages/**'
@@ -32,33 +36,23 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Install openvera package
+      - name: Install workspace dependencies
         run: npm ci
-        working-directory: packages/openvera
 
       - name: Build openvera package
-        run: npm run build
-        working-directory: packages/openvera
-
-      - name: Install frontend
-        run: npm ci
-        working-directory: frontend
+        run: npm run build --workspace openvera
 
       - name: Lint
-        run: npm run lint
-        working-directory: frontend
+        run: npm run lint --workspace openvera-frontend
 
       - name: Typecheck
-        run: npm run typecheck
-        working-directory: frontend
+        run: npm run typecheck --workspace openvera-frontend
 
       - name: Unused files & deps
-        run: npm run knip
-        working-directory: frontend
+        run: npm run knip --workspace openvera-frontend
 
       - name: Build
-        run: npm run build
-        working-directory: frontend
+        run: npm run build --workspace openvera-frontend
 
   backend:
     name: Backend tests

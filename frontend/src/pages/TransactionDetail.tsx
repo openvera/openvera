@@ -1,9 +1,12 @@
-import { useRef, useState } from 'react'
+import { type ChangeEvent, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
+import { Link as RadixLink, Spinner } from '@radix-ui/themes'
+import { Badge, Button, LabelledCheckbox, Select, TextArea } from '@swedev/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, CheckCircle, Link as LinkIcon, Pencil, RefreshCw, Trash2, XCircle } from 'lucide-react'
 import {
   AmountCell,
+  cn,
   ConfirmDialog,
   DateCell,
   deleteTransaction,
@@ -65,7 +68,7 @@ export default function TransactionDetail() {
   if (isLoading || !txn) {
     return (
       <div className="flex justify-center py-20">
-        <span className="loading loading-spinner loading-lg" />
+        <Spinner size="3" />
       </div>
     )
   }
@@ -76,41 +79,32 @@ export default function TransactionDetail() {
 
   const statusBadge = txn.is_internal_transfer
     ? (
-        <span className="badge badge-ghost badge-sm gap-1">
-          <RefreshCw className="w-3 h-3" />
-          Överföring
-        </span>
+        <Badge semantic="neutral"><RefreshCw className="w-3 h-3" />Överföring</Badge>
       )
     : txn.is_matched && allReviewed
       ? (
-          <span className="badge badge-success badge-sm gap-1">
-            <CheckCircle className="w-3 h-3" />
-            Matchad
-          </span>
+          <Badge semantic="success"><CheckCircle className="w-3 h-3" />Matchad</Badge>
         )
       : txn.is_matched
         ? (
-            <span className="badge badge-info badge-sm gap-1">
-              <LinkIcon className="w-3 h-3" />
-              Matchad{matches[0]?.confidence ? ` ${matches[0].confidence}%` : ''}
-            </span>
+            <Badge semantic="info"><LinkIcon className="w-3 h-3" />Matchad{matches[0]?.confidence ? ` ${matches[0].confidence}%` : ''}</Badge>
           )
         : txn.needs_receipt === 0
           ? null
           : (
-              <span className="badge badge-error badge-sm gap-1">
-                <XCircle className="w-3 h-3" />
-                Ej matchad
-              </span>
+              <Badge semantic="error"><XCircle className="w-3 h-3" />Ej matchad</Badge>
             )
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <button onClick={() => navigate(-1)} className="btn btn-ghost btn-sm btn-square">
-          <ArrowLeft className="w-4 h-4" />
-        </button>
+        <Button
+          variant="ghost"
+          size="2"
+          onClick={() => navigate(-1)}
+          icon={<ArrowLeft />}
+        />
         <div className="flex-1">
           <div className="flex items-center gap-3">
             <h1 className="page-title">
@@ -123,23 +117,24 @@ export default function TransactionDetail() {
         <span className="text-lg font-semibold tabular-nums">
           <AmountCell amount={txn.amount} />
         </span>
-        <button
-          className="btn btn-ghost btn-sm gap-1"
+        <Button
+          variant="ghost"
+          size="2"
           onClick={() => setShowEdit(true)}
-        >
-          <Pencil className="w-4 h-4" />
-          Redigera
-        </button>
-        <button
-          className="btn btn-ghost btn-sm gap-1 text-red-400 hover:text-red-600"
+          icon={<Pencil />}
+          text="Redigera"
+        />
+        <Button
+          variant="ghost"
+          size="2"
+          semantic="destructive"
           onClick={() => setShowDelete(true)}
-        >
-          <Trash2 className="w-4 h-4" />
-          Ta bort
-        </button>
+          icon={<Trash2 />}
+          text="Ta bort"
+        />
       </div>
 
-      <div className={`grid grid-cols-1 gap-6 ${matches.length > 0 || txn.needs_receipt !== 0 ? 'lg:grid-cols-2' : ''}`}>
+      <div className={cn('grid grid-cols-1 gap-6', { 'lg:grid-cols-2': matches.length > 0 || txn.needs_receipt !== 0 })}>
         {/* Info card */}
         <div className="bg-base-100 rounded-xl shadow-sm p-5 space-y-4">
           <h2 className="text-sm font-semibold uppercase tracking-wider text-base-content/50">
@@ -163,12 +158,11 @@ export default function TransactionDetail() {
             <dd>
               {txn.account_name
                 ? (
-                    <Link
-                      to={`/transactions?account=${txn.account_id}`}
-                      className="link link-hover link-primary text-sm"
-                    >
-                      {txn.account_name}
-                    </Link>
+                    <RadixLink underline="hover" size="2" asChild>
+                      <Link to={`/transactions?account=${txn.account_id}`}>
+                        {txn.account_name}
+                      </Link>
+                    </RadixLink>
                   )
                 : (
                     '—'
@@ -179,12 +173,11 @@ export default function TransactionDetail() {
             <dd>
               {txn.company_name
                 ? (
-                    <Link
-                      to={`/settings?company=${txn.company_slug}`}
-                      className="link link-hover link-primary text-sm"
-                    >
-                      {txn.company_name}
-                    </Link>
+                    <RadixLink underline="hover" size="2" asChild>
+                      <Link to={`/settings?company=${txn.company_slug}`}>
+                        {txn.company_name}
+                      </Link>
+                    </RadixLink>
                   )
                 : (
                     '—'
@@ -222,9 +215,7 @@ export default function TransactionDetail() {
             <h2 className="text-sm font-semibold uppercase tracking-wider text-base-content/50">
               Matchade dokument
               {matches.length > 0 && (
-                <span className="badge badge-sm badge-ghost ml-2">
-                  {matches.length}
-                </span>
+                <Badge semantic="neutral" ml="2" text={matches.length} />
               )}
             </h2>
             {matches.length === 0
@@ -241,9 +232,7 @@ export default function TransactionDetail() {
                       >
                         <div className="flex items-center justify-between mb-2">
                           <span className="font-medium">{m.party_name || '—'}</span>
-                          <span className="badge badge-ghost badge-sm">
-                            {label.docType(m.doc_type)}
-                          </span>
+                          <Badge semantic="neutral" text={label.docType(m.doc_type)} />
                         </div>
                         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
                           <dt className="text-base-content/50">Belopp</dt>
@@ -291,25 +280,20 @@ export default function TransactionDetail() {
         onClose={() => setShowEdit(false)}
         footer={
           <>
-            <button
-              className="btn btn-ghost btn-sm"
+            <Button
+              variant="ghost"
+              size="2"
               onClick={() => setShowEdit(false)}
-            >
-              Avbryt
-            </button>
-            <button
-              className="btn btn-primary btn-sm"
+              text="Avbryt"
+            />
+            <Button
+              semantic="action"
+              size="2"
               onClick={() => editActions.current?.submit()}
               disabled={updateMutation.isPending}
-            >
-              {updateMutation.isPending
-                ? (
-                    <span className="loading loading-spinner loading-xs" />
-                  )
-                : (
-                    'Spara'
-                  )}
-            </button>
+              loading={updateMutation.isPending}
+              text="Spara"
+            />
           </>
         }
       >
@@ -380,62 +364,49 @@ function TransactionForm({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="label text-sm">Kontokod</label>
-          <select
-            className="select select-bordered select-sm w-full"
-            value={accountingCode}
-            onChange={(e) => setAccountingCode(e.target.value)}
-          >
-            <option value="">— Ingen —</option>
-            {basAccounts.map((ba) => (
-              <option key={ba.code} value={ba.code}>
-                {ba.code} {ba.name}
-              </option>
-            ))}
-          </select>
+          <Select.Root value={accountingCode || undefined} onValueChange={(v: string | undefined) => setAccountingCode(v === '__clear__' ? '' : (v ?? ''))} size="2">
+            <Select.Trigger variant="surface" placeholder="— Ingen —" />
+            <Select.Content>
+              <Select.Item value="__clear__">— Ingen —</Select.Item>
+              {basAccounts.map((ba) => (
+                <Select.Item key={ba.code} value={ba.code}>
+                  {ba.code} {ba.name}
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select.Root>
         </div>
         <div>
           <label className="label text-sm">Kategori</label>
-          <select
-            className="select select-bordered select-sm w-full"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-          >
-            <option value="">— Ingen —</option>
-            <option value="expense">Utgift</option>
-            <option value="income">Intäkt</option>
-            <option value="transfer">Överföring</option>
-            <option value="salary">Lön</option>
-          </select>
+          <Select.Root value={category || undefined} onValueChange={(v: string | undefined) => setCategory(v === '__clear__' ? '' : (v ?? ''))} size="2">
+            <Select.Trigger variant="surface" placeholder="— Ingen —" />
+            <Select.Content>
+              <Select.Item value="__clear__">— Ingen —</Select.Item>
+              <Select.Item value="expense">Utgift</Select.Item>
+              <Select.Item value="income">Intäkt</Select.Item>
+              <Select.Item value="transfer">Överföring</Select.Item>
+              <Select.Item value="salary">Lön</Select.Item>
+            </Select.Content>
+          </Select.Root>
         </div>
       </div>
       <div>
         <label className="label text-sm">Anteckningar</label>
-        <textarea
-          className="textarea textarea-bordered w-full text-sm"
-          rows={3}
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-        />
+        <TextArea.Root size="2" variant="surface" rows={3} value={notes} onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value)} />
       </div>
       <div className="flex gap-6">
-        <label className="label cursor-pointer gap-2">
-          <input
-            type="checkbox"
-            className="checkbox checkbox-sm"
-            checked={isTransfer}
-            onChange={(e) => setIsTransfer(e.target.checked)}
-          />
-          <span className="text-sm">Intern överföring</span>
-        </label>
-        <label className="label cursor-pointer gap-2">
-          <input
-            type="checkbox"
-            className="checkbox checkbox-sm"
-            checked={needsReceipt}
-            onChange={(e) => setNeedsReceipt(e.target.checked)}
-          />
-          <span className="text-sm">Behöver underlag</span>
-        </label>
+        <LabelledCheckbox
+          size="2"
+          checked={isTransfer}
+          onCheckedChange={(v: boolean | 'indeterminate') => setIsTransfer(v === true)}
+          label="Intern överföring"
+        />
+        <LabelledCheckbox
+          size="2"
+          checked={needsReceipt}
+          onCheckedChange={(v: boolean | 'indeterminate') => setNeedsReceipt(v === true)}
+          label="Behöver underlag"
+        />
       </div>
     </div>
   )

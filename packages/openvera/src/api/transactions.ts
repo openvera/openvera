@@ -69,20 +69,20 @@ export const deleteTransfer = (id: number) =>
   api<{ ok: boolean }>(`/api/transfers/${id}`, { method: 'DELETE' })
 
 export interface TransactionSearchResult {
-  id: number
-  date: string
-  reference: string
-  amount: number
-  account_name: string
+  id: number;
+  date: string;
+  reference: string;
+  amount: number;
+  account_name: string;
 }
 
 export const searchTransactions = (params: {
-  company_id?: number
-  amount?: number
-  date?: string
-  q?: string
-  doc_type?: string
-  unmatched_only?: boolean
+  company_id?: number;
+  amount?: number;
+  date?: string;
+  q?: string;
+  doc_type?: string;
+  unmatched_only?: boolean;
 }) => {
   const search = new URLSearchParams()
   if (params.company_id) search.set('company_id', String(params.company_id))

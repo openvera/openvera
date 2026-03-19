@@ -2,7 +2,6 @@ import {
   createContext,
   type ReactNode,
   useContext,
-  useEffect,
   useState,
 } from 'react'
 import { useQuery } from '@tanstack/react-query'
@@ -27,20 +26,16 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     queryFn: getCompanies,
   })
 
-  const [selected, setSelectedState] = useState<Company | null>(null)
-
-  // Restore from localStorage or pick first company
-  useEffect(() => {
-    if (companies.length === 0) return
+  const [selectedId, setSelectedId] = useState<number | null>(() => {
     const savedId = localStorage.getItem(STORAGE_KEY)
-    const match = savedId
-      ? companies.find((c) => c.id === Number(savedId))
-      : null
-    setSelectedState(match ?? companies[0]!)
-  }, [companies])
+    return savedId ? Number(savedId) : null
+  })
+  const selected = companies.find((company) => company.id === selectedId)
+    ?? companies[0]
+    ?? null
 
   const setSelected = (company: Company) => {
-    setSelectedState(company)
+    setSelectedId(company.id)
     localStorage.setItem(STORAGE_KEY, String(company.id))
   }
 

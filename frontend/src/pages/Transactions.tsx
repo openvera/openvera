@@ -1,11 +1,14 @@
-import { useMemo, useState } from 'react'
+import { type ChangeEvent, type MouseEvent, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
+import { Spinner } from '@radix-ui/themes'
+import { Badge, Button, Checkbox, Select, Table, TextField } from '@swedev/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { RefreshCw, Search } from 'lucide-react'
 import {
   type Account,
   AmountCell,
   batchUpdateTransactions,
+  cn,
   DateCell,
   EmptyState,
   getBasAccounts,
@@ -136,7 +139,7 @@ export default function Transactions() {
   if (isLoading) {
     return (
       <div className="flex justify-center py-20">
-        <span className="loading loading-spinner loading-lg" />
+        <Spinner size="3" />
       </div>
     )
   }
@@ -147,39 +150,38 @@ export default function Transactions() {
 
       {/* Filter bar */}
       <div className="flex flex-wrap items-center gap-3">
-        <select
-          className="select select-bordered select-sm"
-          value={accountFilter}
-          onChange={(e) => setAccountFilter(e.target.value)}
-        >
-          <option value="all">Alla konton</option>
-          {accounts.map((a) => (
-            <option key={a.id} value={String(a.id)}>
-              {a.name}
-            </option>
-          ))}
-        </select>
+        <Select.Root value={accountFilter} onValueChange={(v: string | undefined) => setAccountFilter(v ?? 'all')} size="2">
+          <Select.Trigger variant="surface" placeholder="Alla konton" />
+          <Select.Content>
+            <Select.Item value="all">Alla konton</Select.Item>
+            {accounts.map((a) => (
+              <Select.Item key={a.id} value={String(a.id)}>
+                {a.name}
+              </Select.Item>
+            ))}
+          </Select.Content>
+        </Select.Root>
 
-        <select
-          className="select select-bordered select-sm"
-          value={matchFilter}
-          onChange={(e) => setMatchFilter(e.target.value as MatchFilter)}
-        >
-          <option value="all">Alla</option>
-          <option value="matched">Matchade</option>
-          <option value="unmatched">Omatchade</option>
-        </select>
+        <Select.Root value={matchFilter} onValueChange={(v: string | undefined) => setMatchFilter((v ?? 'all') as MatchFilter)} size="2">
+          <Select.Trigger variant="surface" placeholder="Alla" />
+          <Select.Content>
+            <Select.Item value="all">Alla</Select.Item>
+            <Select.Item value="matched">Matchade</Select.Item>
+            <Select.Item value="unmatched">Omatchade</Select.Item>
+          </Select.Content>
+        </Select.Root>
 
-        <label className="input input-bordered input-sm flex items-center gap-2 w-60">
-          <Search className="w-4 h-4 opacity-30" />
-          <input
-            type="text"
-            placeholder="Sök referens..."
-            className="grow"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </label>
+        <TextField.Root
+          size="2"
+          variant="surface"
+          placeholder="Sök referens..."
+          value={search}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+        >
+          <TextField.Slot side="left">
+            <Search className="w-4 h-4 opacity-30" />
+          </TextField.Slot>
+        </TextField.Root>
 
         <span className="text-sm text-base-content/50 tabular-nums">
           {filtered.length} transaktioner
@@ -187,63 +189,55 @@ export default function Transactions() {
       </div>
 
       {/* Batch edit bar */}
-      <div className={`bg-base-200 rounded-xl p-3 flex flex-wrap items-center gap-3 ${selectedIds.size === 0 ? 'opacity-40 pointer-events-none' : ''}`}>
+      <div className={cn('bg-base-200 rounded-xl p-3 flex flex-wrap items-center gap-3', { 'opacity-40 pointer-events-none': selectedIds.size === 0 })}>
         <span className="text-sm font-medium">
           {selectedIds.size} markerade
         </span>
-        <select
-          className="select select-bordered select-sm w-auto"
-          value={batchCode}
-          onChange={(e) => setBatchCode(e.target.value)}
-        >
-          <option value="">Kontokod...</option>
-          {basAccounts.map((ba) => (
-            <option key={ba.code} value={ba.code}>
-              {ba.code} {ba.name}
-            </option>
-          ))}
-        </select>
-        <select
-          className="select select-bordered select-sm w-auto"
-          value={batchCategory}
-          onChange={(e) => setBatchCategory(e.target.value)}
-        >
-          <option value="">Kategori...</option>
-          <option value="expense">Utgift</option>
-          <option value="income">Intäkt</option>
-          <option value="transfer">Överföring</option>
-          <option value="salary">Lön</option>
-        </select>
-        <select
-          className="select select-bordered select-sm w-auto"
-          value={batchTransfer}
-          onChange={(e) => setBatchTransfer(e.target.value)}
-        >
-          <option value="">Överföring...</option>
-          <option value="yes">Intern överföring: Ja</option>
-          <option value="no">Intern överföring: Nej</option>
-        </select>
-        <select
-          className="select select-bordered select-sm w-auto"
-          value={batchNeedsReceipt}
-          onChange={(e) => setBatchNeedsReceipt(e.target.value)}
-        >
-          <option value="">Underlag...</option>
-          <option value="yes">Behöver underlag: Ja</option>
-          <option value="no">Behöver underlag: Nej</option>
-        </select>
+        <Select.Root value={batchCode || undefined} onValueChange={(v: string | undefined) => setBatchCode(v ?? '')} size="2">
+          <Select.Trigger variant="surface" placeholder="Kontokod..." />
+          <Select.Content>
+            {basAccounts.map((ba) => (
+              <Select.Item key={ba.code} value={ba.code}>
+                {ba.code} {ba.name}
+              </Select.Item>
+            ))}
+          </Select.Content>
+        </Select.Root>
+        <Select.Root value={batchCategory || undefined} onValueChange={(v: string | undefined) => setBatchCategory(v ?? '')} size="2">
+          <Select.Trigger variant="surface" placeholder="Kategori..." />
+          <Select.Content>
+            <Select.Item value="expense">Utgift</Select.Item>
+            <Select.Item value="income">Intäkt</Select.Item>
+            <Select.Item value="transfer">Överföring</Select.Item>
+            <Select.Item value="salary">Lön</Select.Item>
+          </Select.Content>
+        </Select.Root>
+        <Select.Root value={batchTransfer || undefined} onValueChange={(v: string | undefined) => setBatchTransfer(v ?? '')} size="2">
+          <Select.Trigger variant="surface" placeholder="Överföring..." />
+          <Select.Content>
+            <Select.Item value="yes">Intern överföring: Ja</Select.Item>
+            <Select.Item value="no">Intern överföring: Nej</Select.Item>
+          </Select.Content>
+        </Select.Root>
+        <Select.Root value={batchNeedsReceipt || undefined} onValueChange={(v: string | undefined) => setBatchNeedsReceipt(v ?? '')} size="2">
+          <Select.Trigger variant="surface" placeholder="Underlag..." />
+          <Select.Content>
+            <Select.Item value="yes">Behöver underlag: Ja</Select.Item>
+            <Select.Item value="no">Behöver underlag: Nej</Select.Item>
+          </Select.Content>
+        </Select.Root>
         <span className="flex-1" />
-        <button
-          className="btn btn-primary btn-sm"
+        <Button
+          semantic="action"
+          size="2"
           onClick={handleBatchSave}
           disabled={batchMutation.isPending || !hasBatchChanges}
-        >
-          {batchMutation.isPending
-            ? <span className="loading loading-spinner loading-xs" />
-            : 'Spara'}
-        </button>
-        <button
-          className="btn btn-ghost btn-sm"
+          loading={batchMutation.isPending}
+          text="Spara"
+        />
+        <Button
+          variant="ghost"
+          size="2"
           onClick={() => {
             setSelectedIds(new Set())
             setBatchCode('')
@@ -251,9 +245,8 @@ export default function Transactions() {
             setBatchTransfer('')
             setBatchNeedsReceipt('')
           }}
-        >
-          Avbryt
-        </button>
+          text="Avbryt"
+        />
       </div>
 
       {filtered.length === 0
@@ -263,68 +256,64 @@ export default function Transactions() {
         : (
             <div className="bg-base-100 rounded-xl shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="table table-sm">
-                  <thead>
-                    <tr>
-                      <th className="w-8">
-                        <input
-                          type="checkbox"
-                          className="checkbox checkbox-sm"
+                <Table.Root size="2">
+                  <Table.Header>
+                    <Table.Row>
+                      <Table.ColumnHeaderCell className="w-8">
+                        <Checkbox
+                          size="2"
                           checked={allSelected}
-                          onChange={toggleAll}
+                          onCheckedChange={() => toggleAll()}
                         />
-                      </th>
-                      <th className="tabular-nums text-base-content/40 w-12">ID</th>
-                      <th>Datum</th>
-                      <th>Referens</th>
-                      <th className="text-right">Belopp</th>
-                      <th>Konto</th>
-                      <th>Kontokod</th>
-                      <th>Underlag</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                      </Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell className="tabular-nums text-base-content/40 w-12">ID</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Datum</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Referens</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell justify="end">Belopp</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Konto</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Kontokod</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Underlag</Table.ColumnHeaderCell>
+                    </Table.Row>
+                  </Table.Header>
+                  <Table.Body>
                     {filtered.map((txn) => (
-                      <tr
+                      <Table.Row
                         key={txn.id}
-                        className={`hover cursor-pointer ${selectedIds.has(txn.id) ? 'bg-primary/5' : ''}`}
+                        className={cn('cursor-pointer', { 'bg-primary/5': selectedIds.has(txn.id) })}
                         onClick={() => navigate(`/transactions/${txn.id}`)}
                       >
-                        <td onClick={(e) => e.stopPropagation()}>
-                          <input
-                            type="checkbox"
-                            className="checkbox checkbox-sm"
+                        <Table.Cell onClick={(e: MouseEvent<HTMLTableDataCellElement>) => e.stopPropagation()}>
+                          <Checkbox
+                            size="2"
                             checked={selectedIds.has(txn.id)}
-                            onChange={() => toggleOne(txn.id)}
+                            onCheckedChange={() => toggleOne(txn.id)}
                           />
-                        </td>
-                        <td className="tabular-nums text-base-content/40">{txn.id}</td>
-                        <td className="tabular-nums">
+                        </Table.Cell>
+                        <Table.Cell className="tabular-nums text-base-content/40">{txn.id}</Table.Cell>
+                        <Table.Cell className="tabular-nums">
                           <DateCell date={txn.date} />
-                        </td>
-                        <td className="max-w-xs truncate font-medium">
+                        </Table.Cell>
+                        <Table.Cell className="max-w-xs truncate font-medium">
                           {txn.reference}
-                        </td>
-                        <td className="text-right">
+                        </Table.Cell>
+                        <Table.Cell justify="end">
                           <AmountCell amount={txn.amount} />
-                        </td>
-                        <td>{txn.account_name}</td>
-                        <td className="tabular-nums">
+                        </Table.Cell>
+                        <Table.Cell>{txn.account_name}</Table.Cell>
+                        <Table.Cell className="tabular-nums">
                           {txn.accounting_code || '—'}
-                        </td>
-                        <td>
+                        </Table.Cell>
+                        <Table.Cell>
                           {txn.is_internal_transfer
                             ? (
-                                <span className="badge badge-ghost badge-sm gap-1">
+                                <Badge semantic="neutral">
                                   <RefreshCw className="w-3 h-3" />
                                   Överföring
-                                </span>
+                                </Badge>
                               )
                             : txn.needs_receipt === 0
                               ? (
-                                  <span className="badge badge-ghost badge-sm gap-1">
-                                    Behövs ej
-                                  </span>
+                                  <Badge semantic="neutral" text="Behövs ej" />
                                 )
                               : (
                                   <StatusBadge
@@ -333,11 +322,11 @@ export default function Transactions() {
                                     confidence={txn.match_confidence}
                                   />
                                 )}
-                        </td>
-                      </tr>
+                        </Table.Cell>
+                      </Table.Row>
                     ))}
-                  </tbody>
-                </table>
+                  </Table.Body>
+                </Table.Root>
               </div>
             </div>
           )}

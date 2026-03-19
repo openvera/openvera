@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { type ChangeEvent, useState } from 'react'
+import { Spinner } from '@radix-ui/themes'
+import { Table, TextField } from '@swedev/ui'
 import { useQuery } from '@tanstack/react-query'
 import { FileOutput } from 'lucide-react'
 import { AmountCell, EmptyState, getReport, getSieExportUrl, getVatReport, useCompany } from 'openvera'
@@ -28,7 +30,7 @@ export default function Reports() {
   if (isLoading) {
     return (
       <div className="flex justify-center py-20">
-        <span className="loading loading-spinner loading-lg" />
+        <Spinner size="3" />
       </div>
     )
   }
@@ -39,8 +41,8 @@ export default function Reports() {
         <h1 className="page-title">Rapporter</h1>
         <a
           href={getSieExportUrl(selected.id, currentYear)}
-          className="btn btn-sm btn-outline gap-1"
           download
+          className="btn btn-outline btn-sm inline-flex items-center gap-2"
         >
           <FileOutput className="w-4 h-4" />
           Exportera SIE4
@@ -50,21 +52,11 @@ export default function Reports() {
       <div className="flex gap-3 items-end">
         <div>
           <label className="label text-sm">Från</label>
-          <input
-            type="date"
-            className="input input-bordered input-sm"
-            value={from}
-            onChange={(e) => setFrom(e.target.value)}
-          />
+          <TextField.Root type="date" size="2" variant="surface" value={from} onChange={(e: ChangeEvent<HTMLInputElement>) => setFrom(e.target.value)} />
         </div>
         <div>
           <label className="label text-sm">Till</label>
-          <input
-            type="date"
-            className="input input-bordered input-sm"
-            value={to}
-            onChange={(e) => setTo(e.target.value)}
-          />
+          <TextField.Root type="date" size="2" variant="surface" value={to} onChange={(e: ChangeEvent<HTMLInputElement>) => setTo(e.target.value)} />
         </div>
       </div>
 
@@ -109,32 +101,32 @@ export default function Reports() {
               </h2>
               <div className="bg-base-100 rounded-xl shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="table table-sm">
-                    <thead>
-                      <tr>
-                        <th>Period</th>
-                        <th className="text-right">Intäkter</th>
-                        <th className="text-right">Kostnader</th>
-                        <th className="text-right">Netto</th>
-                      </tr>
-                    </thead>
-                    <tbody>
+                  <Table.Root size="2">
+                    <Table.Header>
+                      <Table.Row>
+                        <Table.ColumnHeaderCell>Period</Table.ColumnHeaderCell>
+                        <Table.ColumnHeaderCell justify="end">Intäkter</Table.ColumnHeaderCell>
+                        <Table.ColumnHeaderCell justify="end">Kostnader</Table.ColumnHeaderCell>
+                        <Table.ColumnHeaderCell justify="end">Netto</Table.ColumnHeaderCell>
+                      </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
                       {report.by_period.map((p) => (
-                        <tr key={p.period}>
-                          <td className="font-medium">{p.period}</td>
-                          <td className="text-right">
+                        <Table.Row key={p.period}>
+                          <Table.Cell className="font-medium">{p.period}</Table.Cell>
+                          <Table.Cell justify="end">
                             <AmountCell amount={p.income} />
-                          </td>
-                          <td className="text-right">
+                          </Table.Cell>
+                          <Table.Cell justify="end">
                             <AmountCell amount={p.expenses} />
-                          </td>
-                          <td className="text-right">
+                          </Table.Cell>
+                          <Table.Cell justify="end">
                             <AmountCell amount={p.income + p.expenses} />
-                          </td>
-                        </tr>
+                          </Table.Cell>
+                        </Table.Row>
                       ))}
-                    </tbody>
-                  </table>
+                    </Table.Body>
+                  </Table.Root>
                 </div>
               </div>
             </section>
@@ -174,31 +166,31 @@ export default function Reports() {
                   </div>
                 </div>
                 <div className="overflow-x-auto border-t border-base-200">
-                  <table className="table table-sm">
-                    <thead>
-                      <tr>
-                        <th>Momssats</th>
-                        <th className="text-right">Netto (SEK)</th>
-                        <th className="text-right">Moms (SEK)</th>
-                        <th className="text-right">Antal</th>
-                      </tr>
-                    </thead>
-                    <tbody>
+                  <Table.Root size="2">
+                    <Table.Header>
+                      <Table.Row>
+                        <Table.ColumnHeaderCell>Momssats</Table.ColumnHeaderCell>
+                        <Table.ColumnHeaderCell justify="end">Netto (SEK)</Table.ColumnHeaderCell>
+                        <Table.ColumnHeaderCell justify="end">Moms (SEK)</Table.ColumnHeaderCell>
+                        <Table.ColumnHeaderCell justify="end">Antal</Table.ColumnHeaderCell>
+                      </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
                       {vatReport.by_rate.map((r) => (
-                        <tr key={r.rate}>
-                          <td className="font-medium">
+                        <Table.Row key={r.rate}>
+                          <Table.Cell className="font-medium">
                             {r.rate === 0 ? 'Okänd sats' : `${r.rate}%`}
-                          </td>
-                          <td className="text-right tabular-nums">
+                          </Table.Cell>
+                          <Table.Cell className="tabular-nums" justify="end">
                             {r.net_sek.toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          </td>
-                          <td className="text-right tabular-nums">
+                          </Table.Cell>
+                          <Table.Cell className="tabular-nums" justify="end">
                             {r.vat_sek.toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          </td>
-                          <td className="text-right tabular-nums">{r.count}</td>
-                        </tr>
+                          </Table.Cell>
+                          <Table.Cell className="tabular-nums" justify="end">{r.count}</Table.Cell>
+                        </Table.Row>
                       ))}
-                    </tbody>
+                    </Table.Body>
                     <tfoot>
                       <tr className="font-semibold">
                         <td>Totalt</td>
@@ -211,7 +203,7 @@ export default function Reports() {
                         <td></td>
                       </tr>
                     </tfoot>
-                  </table>
+                  </Table.Root>
                 </div>
               </div>
             </section>
@@ -224,32 +216,32 @@ export default function Reports() {
               </h2>
               <div className="bg-base-100 rounded-xl shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="table table-sm">
-                    <thead>
-                      <tr>
-                        <th>Konto</th>
-                        <th>Beskrivning</th>
-                        <th className="text-right">Antal</th>
-                        <th className="text-right">Totalt</th>
-                      </tr>
-                    </thead>
-                    <tbody>
+                  <Table.Root size="2">
+                    <Table.Header>
+                      <Table.Row>
+                        <Table.ColumnHeaderCell>Konto</Table.ColumnHeaderCell>
+                        <Table.ColumnHeaderCell>Beskrivning</Table.ColumnHeaderCell>
+                        <Table.ColumnHeaderCell justify="end">Antal</Table.ColumnHeaderCell>
+                        <Table.ColumnHeaderCell justify="end">Totalt</Table.ColumnHeaderCell>
+                      </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
                       {report.by_account.map((a, i) => (
-                        <tr key={i}>
-                          <td className="tabular-nums font-medium">
+                        <Table.Row key={i}>
+                          <Table.Cell className="tabular-nums font-medium">
                             {a.code ?? '—'}
-                          </td>
-                          <td>
+                          </Table.Cell>
+                          <Table.Cell>
                             {a.name ?? '—'}
-                          </td>
-                          <td className="text-right tabular-nums">{a.count}</td>
-                          <td className="text-right">
+                          </Table.Cell>
+                          <Table.Cell className="tabular-nums" justify="end">{a.count}</Table.Cell>
+                          <Table.Cell justify="end">
                             <AmountCell amount={a.total} />
-                          </td>
-                        </tr>
+                          </Table.Cell>
+                        </Table.Row>
                       ))}
-                    </tbody>
-                  </table>
+                    </Table.Body>
+                  </Table.Root>
                 </div>
               </div>
             </section>
@@ -262,26 +254,26 @@ export default function Reports() {
               </h2>
               <div className="bg-base-100 rounded-xl shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="table table-sm">
-                    <thead>
-                      <tr>
-                        <th>Leverantör</th>
-                        <th className="text-right">Antal</th>
-                        <th className="text-right">Totalt</th>
-                      </tr>
-                    </thead>
-                    <tbody>
+                  <Table.Root size="2">
+                    <Table.Header>
+                      <Table.Row>
+                        <Table.ColumnHeaderCell>Leverantör</Table.ColumnHeaderCell>
+                        <Table.ColumnHeaderCell justify="end">Antal</Table.ColumnHeaderCell>
+                        <Table.ColumnHeaderCell justify="end">Totalt</Table.ColumnHeaderCell>
+                      </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
                       {report.by_party.map((v, i) => (
-                        <tr key={i}>
-                          <td className="font-medium">{v.party}</td>
-                          <td className="text-right tabular-nums">{v.count}</td>
-                          <td className="text-right">
+                        <Table.Row key={i}>
+                          <Table.Cell className="font-medium">{v.party}</Table.Cell>
+                          <Table.Cell className="tabular-nums" justify="end">{v.count}</Table.Cell>
+                          <Table.Cell justify="end">
                             <AmountCell amount={v.total} />
-                          </td>
-                        </tr>
+                          </Table.Cell>
+                        </Table.Row>
                       ))}
-                    </tbody>
-                  </table>
+                    </Table.Body>
+                  </Table.Root>
                 </div>
               </div>
             </section>
@@ -297,32 +289,32 @@ export default function Reports() {
               </h2>
               <div className="bg-base-100 rounded-xl shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="table table-sm">
-                    <thead>
-                      <tr>
-                        <th>Datum</th>
-                        <th>Referens</th>
-                        <th className="text-right">Belopp</th>
-                        <th>Konto</th>
-                      </tr>
-                    </thead>
-                    <tbody>
+                  <Table.Root size="2">
+                    <Table.Header>
+                      <Table.Row>
+                        <Table.ColumnHeaderCell>Datum</Table.ColumnHeaderCell>
+                        <Table.ColumnHeaderCell>Referens</Table.ColumnHeaderCell>
+                        <Table.ColumnHeaderCell justify="end">Belopp</Table.ColumnHeaderCell>
+                        <Table.ColumnHeaderCell>Konto</Table.ColumnHeaderCell>
+                      </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
                       {report.missing.map((m, i) => (
-                        <tr key={i}>
-                          <td className="tabular-nums">
+                        <Table.Row key={i}>
+                          <Table.Cell className="tabular-nums">
                             {m.date}
-                          </td>
-                          <td className="truncate max-w-xs font-medium">
+                          </Table.Cell>
+                          <Table.Cell className="truncate max-w-xs font-medium">
                             {m.reference}
-                          </td>
-                          <td className="text-right">
+                          </Table.Cell>
+                          <Table.Cell justify="end">
                             <AmountCell amount={m.amount} />
-                          </td>
-                          <td>{m.account}</td>
-                        </tr>
+                          </Table.Cell>
+                          <Table.Cell>{m.account}</Table.Cell>
+                        </Table.Row>
                       ))}
-                    </tbody>
-                  </table>
+                    </Table.Body>
+                  </Table.Root>
                 </div>
               </div>
             </section>

@@ -1,6 +1,8 @@
-import type { MouseEvent } from 'react'
+import type { ChangeEvent, MouseEvent } from 'react'
 import { useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
+import { Link as RadixLink, Spinner } from '@radix-ui/themes'
+import { Badge, Button, Select, type Semantic, Table, TextArea, TextField } from '@swedev/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Pencil, Plus, Trash2 } from 'lucide-react'
 import {
@@ -21,11 +23,11 @@ import {
   updateParty,
 } from 'openvera'
 
-const entityBadge: Record<string, string> = {
-  business: 'badge-primary',
-  person: 'badge-secondary',
-  authority: 'badge-warning',
-  charity: 'badge-accent',
+const entitySemantic: Record<string, Semantic> = {
+  business: 'action',
+  person: 'neutral',
+  authority: 'warning',
+  charity: 'success',
 }
 
 export default function PartyDetail() {
@@ -118,7 +120,7 @@ export default function PartyDetail() {
   if (isLoading || !party) {
     return (
       <div className="flex justify-center py-20">
-        <span className="loading loading-spinner loading-lg" />
+        <Spinner size="3" />
       </div>
     )
   }
@@ -138,33 +140,33 @@ export default function PartyDetail() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <button onClick={() => navigate(-1)} className="btn btn-ghost btn-sm btn-square">
-          <ArrowLeft className="w-4 h-4" />
-        </button>
+        <Button
+          variant="ghost"
+          size="2"
+          onClick={() => navigate(-1)}
+          icon={<ArrowLeft />}
+        />
         <div className="flex-1">
           <div className="flex items-center gap-3">
             <h1 className="page-title">{party.name}</h1>
-            <span
-              className={`badge badge-soft ${entityBadge[party.entity_type] ?? 'badge-ghost'}`}
-            >
-              {label.entityType(party.entity_type)}
-            </span>
+            <Badge semantic={entitySemantic[party.entity_type] ?? 'neutral'} text={label.entityType(party.entity_type)} />
           </div>
         </div>
-        <button
-          className="btn btn-ghost btn-sm gap-1"
+        <Button
+          variant="ghost"
+          size="2"
           onClick={() => setShowEdit(true)}
-        >
-          <Pencil className="w-4 h-4" />
-          Redigera
-        </button>
-        <button
-          className="btn btn-ghost btn-sm gap-1 text-red-400 hover:text-red-600"
+          icon={<Pencil />}
+          text="Redigera"
+        />
+        <Button
+          variant="ghost"
+          size="2"
+          semantic="destructive"
           onClick={() => setShowDelete(true)}
-        >
-          <Trash2 className="w-4 h-4" />
-          Ta bort
-        </button>
+          icon={<Trash2 />}
+          text="Ta bort"
+        />
       </div>
 
       {/* Info + Relations cards */}
@@ -195,12 +197,7 @@ export default function PartyDetail() {
             <dd className="flex flex-wrap gap-1">
               {party.patterns.length > 0
                 ? party.patterns.map((p, i) => (
-                    <span
-                      key={i}
-                      className="badge badge-ghost badge-sm font-mono"
-                    >
-                      {p}
-                    </span>
+                    <Badge key={i} semantic="neutral" className="font-mono" text={p} />
                   ))
                 : <span className="text-base-content/40">—</span>}
             </dd>
@@ -213,13 +210,13 @@ export default function PartyDetail() {
             <h2 className="text-sm font-semibold uppercase tracking-wider text-base-content/50">
               Företagskopplingar
             </h2>
-            <button
-              className="btn btn-ghost btn-xs gap-1"
+            <Button
+              variant="ghost"
+              size="1"
               onClick={() => setShowAddRelation(true)}
-            >
-              <Plus className="w-3 h-3" />
-              Lägg till
-            </button>
+              icon={<Plus />}
+              text="Lägg till"
+            />
           </div>
           {relations.length === 0
             ? (
@@ -234,16 +231,15 @@ export default function PartyDetail() {
                     >
                       <span>
                         {rel.company_name}
-                        <span className="badge badge-sm badge-ghost ml-2">
-                          {label.relationship(rel.relationship)}
-                        </span>
+                        <Badge semantic="neutral" ml="2" text={label.relationship(rel.relationship)} />
                       </span>
-                      <button
-                        className="btn btn-ghost btn-xs text-red-400 hover:text-red-600"
+                      <Button
+                        variant="ghost"
+                        size="1"
+                        semantic="destructive"
                         onClick={() => setRemoveRelTarget(rel)}
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
+                        icon={<Trash2 />}
+                      />
                     </li>
                   ))}
                 </ul>
@@ -257,9 +253,7 @@ export default function PartyDetail() {
           <h2 className="text-sm font-semibold uppercase tracking-wider text-base-content/50">
             Matchande transaktioner
             {transactions.length > 0 && (
-              <span className="badge badge-sm badge-ghost ml-2">
-                {transactions.length}
-              </span>
+              <Badge semantic="neutral" ml="2" text={transactions.length} />
             )}
           </h2>
         </div>
@@ -271,54 +265,56 @@ export default function PartyDetail() {
             )
           : (
               <div className="overflow-x-auto">
-                <table className="table table-sm">
-                  <thead>
-                    <tr>
-                      <th className="tabular-nums text-base-content/40 w-12">ID</th>
-                      <th>Datum</th>
-                      <th>Referens</th>
-                      <th className="text-right">Belopp</th>
-                      <th>Konto</th>
-                      <th>Företag</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                <Table.Root size="2">
+                  <Table.Header>
+                    <Table.Row>
+                      <Table.ColumnHeaderCell className="tabular-nums text-base-content/40 w-12">ID</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Datum</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Referens</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell justify="end">Belopp</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Konto</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Företag</Table.ColumnHeaderCell>
+                    </Table.Row>
+                  </Table.Header>
+                  <Table.Body>
                     {transactions.map((t) => (
-                      <tr
+                      <Table.Row
                         key={t.id}
-                        className="hover cursor-pointer"
+                        className="cursor-pointer"
                         onClick={() => navigate(`/transactions/${t.id}`)}
                       >
-                        <td className="tabular-nums text-base-content/40">{t.id}</td>
-                        <td className="tabular-nums">
+                        <Table.Cell className="tabular-nums text-base-content/40">{t.id}</Table.Cell>
+                        <Table.Cell className="tabular-nums">
                           {t.date}
-                        </td>
-                        <td className="truncate max-w-xs">{t.reference}</td>
-                        <td className="text-right">
+                        </Table.Cell>
+                        <Table.Cell className="truncate max-w-xs">{t.reference}</Table.Cell>
+                        <Table.Cell justify="end">
                           <AmountCell amount={t.amount} />
-                        </td>
-                        <td>
-                          <Link
-                            to={`/transactions?account=${t.account_id}`}
-                            className="link link-hover link-primary text-sm"
-                            onClick={(e: MouseEvent) => e.stopPropagation()}
-                          >
-                            {t.account}
-                          </Link>
-                        </td>
-                        <td>
-                          <Link
-                            to={`/settings?company=${t.company_slug}`}
-                            className="link link-hover link-primary text-sm"
-                            onClick={(e: MouseEvent) => e.stopPropagation()}
-                          >
-                            {t.company}
-                          </Link>
-                        </td>
-                      </tr>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <RadixLink underline="hover" size="2" asChild>
+                            <Link
+                              to={`/transactions?account=${t.account_id}`}
+                              onClick={(e: MouseEvent) => e.stopPropagation()}
+                            >
+                              {t.account}
+                            </Link>
+                          </RadixLink>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <RadixLink underline="hover" size="2" asChild>
+                            <Link
+                              to={`/settings?company=${t.company_slug}`}
+                              onClick={(e: MouseEvent) => e.stopPropagation()}
+                            >
+                              {t.company}
+                            </Link>
+                          </RadixLink>
+                        </Table.Cell>
+                      </Table.Row>
                     ))}
-                  </tbody>
-                </table>
+                  </Table.Body>
+                </Table.Root>
               </div>
             )}
       </div>
@@ -330,21 +326,20 @@ export default function PartyDetail() {
         onClose={() => setShowEdit(false)}
         footer={
           <>
-            <button
-              className="btn btn-ghost btn-sm"
+            <Button
+              variant="ghost"
+              size="2"
               onClick={() => setShowEdit(false)}
-            >
-              Avbryt
-            </button>
-            <button
-              className="btn btn-primary btn-sm"
+              text="Avbryt"
+            />
+            <Button
+              semantic="action"
+              size="2"
               onClick={() => editActions.current?.submit()}
               disabled={updateMutation.isPending}
-            >
-              {updateMutation.isPending
-                ? <span className="loading loading-spinner loading-xs" />
-                : 'Spara'}
-            </button>
+              loading={updateMutation.isPending}
+              text="Spara"
+            />
           </>
         }
       >
@@ -364,12 +359,12 @@ export default function PartyDetail() {
         title="Lägg till koppling"
         onClose={() => setShowAddRelation(false)}
         footer={
-          <button
-            className="btn btn-ghost btn-sm"
+          <Button
+            variant="ghost"
+            size="2"
             onClick={() => setShowAddRelation(false)}
-          >
-            Stäng
-          </button>
+            text="Stäng"
+          />
         }
       >
         <AddRelationForm
@@ -423,16 +418,15 @@ function AddRelationForm({
     <div className="space-y-4">
       <div>
         <label className="label text-sm">Relationstyp</label>
-        <select
-          className="select select-bordered select-sm w-full"
-          value={relationship}
-          onChange={(e) => setRelationship(e.target.value)}
-        >
-          <option value="vendor">Leverantör</option>
-          <option value="customer">Kund</option>
-          <option value="authority">Myndighet</option>
-          <option value="charity">Välgörenhet</option>
-        </select>
+        <Select.Root value={relationship} onValueChange={(v: string | undefined) => setRelationship(v ?? 'vendor')} size="2">
+          <Select.Trigger variant="surface" />
+          <Select.Content>
+            <Select.Item value="vendor">Leverantör</Select.Item>
+            <Select.Item value="customer">Kund</Select.Item>
+            <Select.Item value="authority">Myndighet</Select.Item>
+            <Select.Item value="charity">Välgörenhet</Select.Item>
+          </Select.Content>
+        </Select.Root>
       </div>
       <div className="max-h-64 overflow-y-auto">
         {companies.length === 0
@@ -499,50 +493,38 @@ function PartyForm({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="label text-sm">Namn</label>
-          <input
-            className="input input-bordered input-sm w-full"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
+          <TextField.Root size="2" variant="surface" value={name} onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)} />
         </div>
         <div>
           <label className="label text-sm">Typ</label>
-          <select
-            className="select select-bordered select-sm w-full"
-            value={entityType}
-            onChange={(e) => setEntityType(e.target.value)}
-          >
-            <option value="business">Företag</option>
-            <option value="person">Person</option>
-            <option value="authority">Myndighet</option>
-            <option value="charity">Välgörenhet</option>
-          </select>
+          <Select.Root value={entityType} onValueChange={(v: string | undefined) => setEntityType(v ?? party.entity_type)} size="2">
+            <Select.Trigger variant="surface" />
+            <Select.Content>
+              <Select.Item value="business">Företag</Select.Item>
+              <Select.Item value="person">Person</Select.Item>
+              <Select.Item value="authority">Myndighet</Select.Item>
+              <Select.Item value="charity">Välgörenhet</Select.Item>
+            </Select.Content>
+          </Select.Root>
         </div>
         <div>
           <label className="label text-sm">Kontokod (BAS)</label>
-          <select
-            className="select select-bordered select-sm w-full"
-            value={defaultCode}
-            onChange={(e) => setDefaultCode(e.target.value)}
-          >
-            <option value="">Ingen</option>
-            {basAccounts.map((a) => (
-              <option key={a.code} value={a.code}>
-                {a.code} — {a.name}
-              </option>
-            ))}
-          </select>
+          <Select.Root value={defaultCode || undefined} onValueChange={(v: string | undefined) => setDefaultCode(v === '__clear__' ? '' : (v ?? ''))} size="2">
+            <Select.Trigger variant="surface" placeholder="Ingen" />
+            <Select.Content>
+              <Select.Item value="__clear__">Ingen</Select.Item>
+              {basAccounts.map((a) => (
+                <Select.Item key={a.code} value={a.code}>
+                  {a.code} — {a.name}
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select.Root>
         </div>
       </div>
       <div>
         <label className="label text-sm">Mönster (ett per rad)</label>
-        <textarea
-          className="textarea textarea-bordered w-full text-sm"
-          rows={3}
-          value={patterns}
-          onChange={(e) => setPatterns(e.target.value)}
-          placeholder={'LEVERANTÖR AB\nLEV-NR 12345'}
-        />
+        <TextArea.Root size="2" variant="surface" rows={3} value={patterns} onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setPatterns(e.target.value)} placeholder={'LEVERANTÖR AB\nLEV-NR 12345'} />
       </div>
     </div>
   )

@@ -1,19 +1,32 @@
-import { useEffect, useRef, useState } from 'react'
-import { Building2, Check, ChevronDown, Plus } from 'lucide-react'
+import type {
+  ChangeEvent,
+  ComponentProps,
+  KeyboardEvent,
+  MouseEvent,
+} from 'react'
+import { useState } from 'react'
+import { Spinner } from '@radix-ui/themes'
+import { Button, Dropdown, TextField } from '@swedev/ui'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { Building2, ChevronDown, Plus } from 'lucide-react'
 
 import { createCompany } from '../api/companies'
 import { useCompany } from '../hooks/useCompany'
+import { cn } from '../utils'
+
+type DropdownItemSelectEvent = Parameters<
+  NonNullable<ComponentProps<typeof Dropdown.Item>['onSelect']>
+>[0]
 
 export default function CompanySelector() {
   const { companies, selected, setSelected, isLoading } = useCompany()
   const queryClient = useQueryClient()
-  const detailsRef = useRef<HTMLDetailsElement>(null)
+  const [open, setOpen] = useState(false)
   const [showCreate, setShowCreate] = useState(false)
   const [newName, setNewName] = useState('')
 
   const close = () => {
-    if (detailsRef.current) detailsRef.current.open = false
+    setOpen(false)
     setShowCreate(false)
     setNewName('')
   }
@@ -27,17 +40,8 @@ export default function CompanySelector() {
     },
   })
 
-  // Close on Escape
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') close()
-    }
-    document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
-  }, [])
-
   if (isLoading) {
-    return <span className="loading loading-spinner loading-sm" />
+    return <Spinner size="1" />
   }
 
   if (companies.length === 0) {
@@ -45,123 +49,124 @@ export default function CompanySelector() {
   }
 
   return (
-    <details ref={detailsRef} className="dropdown dropdown-end">
-      <summary className="btn btn-sm btn-ghost gap-2 font-normal border border-base-300 hover:border-base-content/20 pr-3">
-        <Building2 className="w-4 h-4 text-primary/60" />
-        <span className="font-medium">{selected?.name ?? 'Välj företag'}</span>
-        <ChevronDown className="w-2.5 h-2.5 text-base-content/40 ml-0.5" />
-      </summary>
+    <Dropdown.Root open={open} onOpenChange={setOpen}>
+      <Dropdown.Trigger>
+        <Button
+          variant="ghost"
+          size="2"
+          icon={<Building2 />}
+        >
+          <span className="font-medium">{selected?.name ?? 'Välj företag'}</span>
+          <ChevronDown />
+        </Button>
+      </Dropdown.Trigger>
 
-      <div className="dropdown-content z-50 mt-2 w-72 rounded-xl bg-base-100 shadow-lg border border-base-200 overflow-hidden">
-        <div className="px-3 py-2 border-b border-base-200">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-base-content/40">
-            Välj företag
-          </p>
-        </div>
-        <ul className="py-1">
-          {companies.map((c) => {
-            const isActive = selected?.slug === c.slug
-            return (
-              <li key={c.slug}>
-                <button
-                  className={`w-full text-left px-3 py-2.5 flex items-center gap-3 transition-colors ${
-                    isActive
-                      ? 'bg-primary/5'
-                      : 'hover:bg-base-200/50'
-                  }`}
-                  onClick={() => {
-                    setSelected(c)
-                    close()
-                  }}
+      <Dropdown.Content
+        variant="soft"
+        align="end"
+        className="min-w-56"
+      >
+        <Dropdown.Label>Välj företag</Dropdown.Label>
+
+        {companies.map((c) => {
+          const isActive = selected?.slug === c.slug
+          return (
+            <Dropdown.Item
+              key={c.slug}
+              className="h-auto py-2"
+              onSelect={() => {
+                setSelected(c)
+                close()
+              }}
+            >
+              <div className="flex items-center gap-3 w-full">
+                <div
+                  className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0', {
+                    'bg-primary/10 text-primary': isActive,
+                    'bg-base-200/60 text-base-content/40': !isActive,
+                  })}
                 >
-                  <div
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                      isActive
-                        ? 'bg-primary/10 text-primary'
-                        : 'bg-base-200/60 text-base-content/40'
-                    }`}
-                  >
-                    <Building2 className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className={`text-sm truncate ${
-                        isActive ? 'font-semibold text-primary' : 'font-medium'
-                      }`}
-                    >
-                      {c.name}
-                    </p>
-                    {c.org_number && (
-                      <p className="text-[11px] text-base-content/40 tabular-nums">
-                        {c.org_number}
-                      </p>
-                    )}
-                  </div>
-                  {isActive && (
-                    <Check className="w-4 h-4 text-primary shrink-0" />
-                  )}
-                </button>
-              </li>
-            )
-          })}
-        </ul>
-
-        {/* Create new company */}
-        <div className="border-t border-base-200">
-          {showCreate
-            ? (
-                <div className="p-3 space-y-2">
-                  <input
-                    className="input input-bordered input-sm w-full"
-                    placeholder="Företagsnamn"
-                    value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && newName.trim()) {
-                        createMut.mutate({ name: newName.trim() })
-                      }
-                    }}
-                    autoFocus
-                  />
-                  <div className="flex justify-end gap-1.5">
-                    <button
-                      className="btn btn-ghost btn-xs"
-                      onClick={() => {
-                        setShowCreate(false)
-                        setNewName('')
-                      }}
-                    >
-                      Avbryt
-                    </button>
-                    <button
-                      className="btn btn-primary btn-xs"
-                      disabled={!newName.trim() || createMut.isPending}
-                      onClick={() => createMut.mutate({ name: newName.trim() })}
-                    >
-                      {createMut.isPending
-                        ? (
-                            <span className="loading loading-spinner loading-xs" />
-                          )
-                        : (
-                            'Skapa'
-                          )}
-                    </button>
-                  </div>
+                  <Building2 />
                 </div>
-              )
-            : (
-                <button
-                  className="w-full text-left px-3 py-2.5 flex items-center gap-3 text-sm text-base-content/50 hover:bg-base-200/50 transition-colors"
-                  onClick={() => setShowCreate(true)}
-                >
+                <div className="flex-1 min-w-0">
+                  <p
+                    className={cn('text-sm text-nowrap', {
+                      'font-semibold text-primary': isActive,
+                      'font-medium': !isActive,
+                    })}
+                  >
+                    {c.name}
+                  </p>
+                  {c.org_number && (
+                    <p className="text-[11px] text-base-content/40 tabular-nums">
+                      {c.org_number}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </Dropdown.Item>
+          )
+        })}
+
+        <Dropdown.Separator />
+
+        {showCreate
+          ? (
+              <div
+                className="p-3 space-y-2"
+                onClick={(e: MouseEvent<HTMLDivElement>) => e.stopPropagation()}
+                onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => e.stopPropagation()}
+              >
+                <TextField.Root
+                  size="1"
+                  variant="surface"
+                  placeholder="Företagsnamn"
+                  value={newName}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setNewName(e.target.value)}
+                  onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
+                    if (e.key === 'Enter' && newName.trim()) {
+                      createMut.mutate({ name: newName.trim() })
+                    }
+                  }}
+                  autoFocus
+                />
+                <div className="flex justify-end gap-1.5">
+                  <Button
+                    variant="ghost"
+                    size="1"
+                    onClick={() => {
+                      setShowCreate(false)
+                      setNewName('')
+                    }}
+                    text="Avbryt"
+                  />
+                  <Button
+                    semantic="action"
+                    size="1"
+                    disabled={!newName.trim() || createMut.isPending}
+                    loading={createMut.isPending}
+                    onClick={() => createMut.mutate({ name: newName.trim() })}
+                    text="Skapa"
+                  />
+                </div>
+              </div>
+            )
+          : (
+              <Dropdown.Item
+                onSelect={(e: DropdownItemSelectEvent) => {
+                  e.preventDefault()
+                  setShowCreate(true)
+                }}
+              >
+                <div className="flex items-center gap-3 text-base-content/50">
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-base-200/40 text-base-content/30">
                     <Plus className="w-4 h-4" />
                   </div>
                   Nytt företag
-                </button>
-              )}
-        </div>
-      </div>
-    </details>
+                </div>
+              </Dropdown.Item>
+            )}
+      </Dropdown.Content>
+    </Dropdown.Root>
   )
 }

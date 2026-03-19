@@ -1,3 +1,4 @@
+import { Badge } from '@swedev/ui'
 import {
   Archive,
   CheckCircle,
@@ -24,35 +25,35 @@ export default function StatusBadge({
 }: Props) {
   if (archived) {
     return (
-      <span className="badge badge-ghost badge-sm gap-1">
+      <Badge semantic="neutral">
         <Archive className="w-3 h-3" />
         Arkiverad
-      </span>
+      </Badge>
     )
   }
   if (matched && reviewed) {
     return (
-      <span className="badge badge-success badge-sm gap-1">
+      <Badge semantic="success">
         <CheckCircle className="w-3 h-3" />
         Matchad
-      </span>
+      </Badge>
     )
   }
   if (matched) {
     return (
-      <span className="badge badge-info badge-sm gap-1">
+      <Badge semantic="info">
         <Link className="w-3 h-3" />
         Matchad{confidence ? ` ${confidence}%` : ''}
-      </span>
+      </Badge>
     )
   }
   if (!label.isMatchable(docType)) {
     return null
   }
   return (
-    <span className="badge badge-error badge-sm gap-1">
+    <Badge semantic="error">
       <XCircle className="w-3 h-3" />
       Ej matchad
-    </span>
+    </Badge>
   )
 }

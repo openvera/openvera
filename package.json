@@ -1,0 +1,32 @@
+{
+  "name": "openvera-workspace",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "frontend",
+    "packages/*"
+  ],
+  "scripts": {
+    "build:openvera": "npm run build --workspace openvera",
+    "build:frontend": "npm run build --workspace openvera-frontend",
+    "dev": "npm run dev --workspace openvera-frontend",
+    "lint": "eslint frontend packages",
+    "lint:fix": "eslint frontend packages --fix",
+    "lint:frontend": "npm run lint --workspace openvera-frontend",
+    "typecheck:frontend": "npm run typecheck --workspace openvera-frontend",
+    "knip:frontend": "npm run knip --workspace openvera-frontend"
+  },
+  "devDependencies": {
+    "@eslint/compat": "^2.0.2",
+    "@eslint/js": "^9.39.2",
+    "@stylistic/eslint-plugin": "^5.8.0",
+    "eslint": "^9.39.2",
+    "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-import-x": "^4.16.1",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "globals": "^16.5.0",
+    "typescript-eslint": "^8.55.0"
+  }
+}

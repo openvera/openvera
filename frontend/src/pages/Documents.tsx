@@ -1,11 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { type ChangeEvent, type MouseEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
+import { Link as RadixLink, Spinner } from '@radix-ui/themes'
+import { Badge, Button, Checkbox, Select, type Semantic, Table, TextField } from '@swedev/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Archive, Check, Search, Trash2 } from 'lucide-react'
 import {
   AmountCell,
   archiveDocument,
   batchUpdateDocuments,
+  cn,
   ConfirmDialog,
   DateCell,
   deleteDocument,
@@ -22,15 +25,15 @@ import {
 
 type DocFilter = 'all' | 'matched' | 'unmatched' | 'reviewed' | 'unreviewed' | 'no_party' | 'archived'
 
-const docTypeBadge: Record<string, string> = {
-  invoice: 'badge-info badge-soft',
-  receipt: 'badge-success badge-soft',
-  kvittens: 'badge-success badge-soft',
-  outgoing_invoice: 'badge-primary badge-soft',
-  credit_note: 'badge-warning badge-soft',
-  salary: 'badge-accent badge-soft',
-  reminder: 'badge-error badge-soft',
-  contract: 'badge-neutral badge-soft',
+const docTypeSemantic: Record<string, Semantic> = {
+  invoice: 'info',
+  receipt: 'success',
+  kvittens: 'success',
+  outgoing_invoice: 'action',
+  credit_note: 'warning',
+  salary: 'action',
+  reminder: 'error',
+  contract: 'neutral',
 }
 
 export default function Documents() {
@@ -209,7 +212,7 @@ export default function Documents() {
   if (isLoading) {
     return (
       <div className="flex justify-center py-20">
-        <span className="loading loading-spinner loading-lg" />
+        <Spinner size="3" />
       </div>
     )
   }
@@ -219,43 +222,36 @@ export default function Documents() {
       <h1 className="page-title">Dokument</h1>
 
       <div className="flex flex-wrap items-center gap-3">
-        <select
-          className="select select-bordered select-sm"
-          value={filter}
-          onChange={(e) => setFilter(e.target.value as DocFilter)}
-        >
-          <option value="all">Alla (ej arkiverade)</option>
-          <option value="matched">Matchade</option>
-          <option value="unmatched">Omatchade</option>
-          <option value="reviewed">Granskade</option>
-          <option value="unreviewed">Ej granskade</option>
-          <option value="no_party">Utan part</option>
-          <option value="archived">Arkiverade</option>
-        </select>
+        <Select.Root value={filter} onValueChange={(v: string | undefined) => setFilter((v ?? 'all') as DocFilter)} size="2">
+          <Select.Trigger variant="surface" placeholder="Filter..." />
+          <Select.Content>
+            <Select.Item value="all">Alla (ej arkiverade)</Select.Item>
+            <Select.Item value="matched">Matchade</Select.Item>
+            <Select.Item value="unmatched">Omatchade</Select.Item>
+            <Select.Item value="reviewed">Granskade</Select.Item>
+            <Select.Item value="unreviewed">Ej granskade</Select.Item>
+            <Select.Item value="no_party">Utan part</Select.Item>
+            <Select.Item value="archived">Arkiverade</Select.Item>
+          </Select.Content>
+        </Select.Root>
 
-        <select
-          className="select select-bordered select-sm"
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-        >
-          <option value="all">Alla typer</option>
-          {docTypes.map((t) => (
-            <option key={t} value={t}>
-              {label.docType(t)}
-            </option>
-          ))}
-        </select>
+        <Select.Root value={typeFilter} onValueChange={(v: string | undefined) => setTypeFilter(v ?? 'all')} size="2">
+          <Select.Trigger variant="surface" placeholder="Alla typer" />
+          <Select.Content>
+            <Select.Item value="all">Alla typer</Select.Item>
+            {docTypes.map((t) => (
+              <Select.Item key={t} value={t}>
+                {label.docType(t)}
+              </Select.Item>
+            ))}
+          </Select.Content>
+        </Select.Root>
 
-        <label className="input input-bordered input-sm flex items-center gap-2 w-60">
-          <Search className="w-4 h-4 opacity-30" />
-          <input
-            type="text"
-            placeholder="Sök fil, part, fakturanr..."
-            className="grow"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </label>
+        <TextField.Root size="2" variant="surface" placeholder="Sök fil, part, fakturanr..." value={search} onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}>
+          <TextField.Slot side="left">
+            <Search className="w-4 h-4 opacity-30" />
+          </TextField.Slot>
+        </TextField.Root>
 
         <span className="text-sm text-base-content/50 tabular-nums">
           {filtered.length} dokument
@@ -263,73 +259,65 @@ export default function Documents() {
       </div>
 
       {/* Batch edit bar */}
-      <div className={`bg-base-200 rounded-xl p-3 flex flex-wrap items-center gap-3 ${selectedIds.size === 0 ? 'opacity-40 pointer-events-none' : ''}`}>
+      <div className={cn('bg-base-200 rounded-xl p-3 flex flex-wrap items-center gap-3', { 'opacity-40 pointer-events-none': selectedIds.size === 0 })}>
         <span className="text-sm font-medium">
           {selectedIds.size} markerade
         </span>
-        <select
-          className="select select-bordered select-sm w-auto"
-          value={batchDocType}
-          onChange={(e) => setBatchDocType(e.target.value)}
-        >
-          <option value="">Typ...</option>
-          <option value="invoice">Faktura</option>
-          <option value="receipt">Kvitto</option>
-          <option value="kvittens">Kvittens</option>
-          <option value="outgoing_invoice">Utgående faktura</option>
-          <option value="credit_note">Kreditnota</option>
-          <option value="reminder">Påminnelse</option>
-          <option value="contract">Avtal</option>
-          <option value="salary">Lönebesked</option>
-          <option value="statement">Kontoutdrag</option>
-          <option value="balansrapport">Balansrapport</option>
-          <option value="resultatrapport">Resultatrapport</option>
-          <option value="betalningssammanstalning">Betalningssammanställning</option>
-          <option value="other">Övrigt</option>
-        </select>
-        <select
-          className="select select-bordered select-sm w-auto"
-          value={batchPartyId}
-          onChange={(e) => setBatchPartyId(e.target.value)}
-        >
-          <option value="">Part...</option>
-          <option value="none">— Ta bort part —</option>
-          {parties.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-        <select
-          className="select select-bordered select-sm w-auto"
-          value={batchReviewed}
-          onChange={(e) => setBatchReviewed(e.target.value)}
-        >
-          <option value="">Granskning...</option>
-          <option value="yes">Markera granskad</option>
-          <option value="no">Ångra granskning</option>
-        </select>
-        <select
-          className="select select-bordered select-sm w-auto"
-          value={batchArchived}
-          onChange={(e) => setBatchArchived(e.target.value)}
-        >
-          <option value="">Arkivering...</option>
-          <option value="yes">Arkivera</option>
-          <option value="no">Avarkivera</option>
-        </select>
+        <Select.Root value={batchDocType || undefined} onValueChange={(v: string | undefined) => setBatchDocType(v ?? '')} size="2">
+          <Select.Trigger variant="surface" placeholder="Typ..." />
+          <Select.Content>
+            <Select.Item value="invoice">Faktura</Select.Item>
+            <Select.Item value="receipt">Kvitto</Select.Item>
+            <Select.Item value="kvittens">Kvittens</Select.Item>
+            <Select.Item value="outgoing_invoice">Utgående faktura</Select.Item>
+            <Select.Item value="credit_note">Kreditnota</Select.Item>
+            <Select.Item value="reminder">Påminnelse</Select.Item>
+            <Select.Item value="contract">Avtal</Select.Item>
+            <Select.Item value="salary">Lönebesked</Select.Item>
+            <Select.Item value="statement">Kontoutdrag</Select.Item>
+            <Select.Item value="balansrapport">Balansrapport</Select.Item>
+            <Select.Item value="resultatrapport">Resultatrapport</Select.Item>
+            <Select.Item value="betalningssammanstalning">Betalningssammanställning</Select.Item>
+            <Select.Item value="other">Övrigt</Select.Item>
+          </Select.Content>
+        </Select.Root>
+        <Select.Root value={batchPartyId || undefined} onValueChange={(v: string | undefined) => setBatchPartyId(v ?? '')} size="2">
+          <Select.Trigger variant="surface" placeholder="Part..." />
+          <Select.Content>
+            <Select.Item value="none">— Ta bort part —</Select.Item>
+            {parties.map((p) => (
+              <Select.Item key={p.id} value={String(p.id)}>
+                {p.name}
+              </Select.Item>
+            ))}
+          </Select.Content>
+        </Select.Root>
+        <Select.Root value={batchReviewed || undefined} onValueChange={(v: string | undefined) => setBatchReviewed(v ?? '')} size="2">
+          <Select.Trigger variant="surface" placeholder="Granskning..." />
+          <Select.Content>
+            <Select.Item value="yes">Markera granskad</Select.Item>
+            <Select.Item value="no">Ångra granskning</Select.Item>
+          </Select.Content>
+        </Select.Root>
+        <Select.Root value={batchArchived || undefined} onValueChange={(v: string | undefined) => setBatchArchived(v ?? '')} size="2">
+          <Select.Trigger variant="surface" placeholder="Arkivering..." />
+          <Select.Content>
+            <Select.Item value="yes">Arkivera</Select.Item>
+            <Select.Item value="no">Avarkivera</Select.Item>
+          </Select.Content>
+        </Select.Root>
         <span className="flex-1" />
-        <button
-          className="btn btn-primary btn-sm"
+        <Button
+          semantic="action"
+          size="2"
           onClick={handleBatchSave}
           disabled={batchMutation.isPending || !hasBatchChanges}
-        >
-          {batchMutation.isPending
-            ? <span className="loading loading-spinner loading-xs" />
-            : 'Spara'}
-        </button>
-        <button
-          className="btn btn-ghost btn-sm"
+          loading={batchMutation.isPending}
+          text="Spara"
+        />
+        <Button
+          variant="ghost"
+          size="2"
           onClick={() => {
             setSelectedIds(new Set())
             setBatchDocType('')
@@ -337,9 +325,8 @@ export default function Documents() {
             setBatchReviewed('')
             setBatchArchived('')
           }}
-        >
-          Avbryt
-        </button>
+          text="Avbryt"
+        />
       </div>
 
       {filtered.length === 0
@@ -352,91 +339,83 @@ export default function Documents() {
         : (
             <div className="bg-base-100 rounded-xl shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="table table-sm w-max min-w-full">
-                  <thead>
-                    <tr>
-                      <th className="w-8">
-                        <input
-                          type="checkbox"
-                          className="checkbox checkbox-sm"
-                          checked={allSelected}
-                          onChange={toggleAll}
-                        />
-                      </th>
-                      <th className="tabular-nums text-base-content/40 w-12">ID</th>
-                      <th>Fil</th>
-                      <th>Part</th>
-                      <th className="text-right">Belopp</th>
-                      <th className="text-right">Kurs</th>
-                      <th className="text-right">SEK</th>
-                      <th className="text-right">Moms</th>
-                      <th>Datum</th>
-                      <th>Typ</th>
-                      <th>Status</th>
-                      <th>Åtgärder</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                <Table.Root size="2" className="w-max min-w-full">
+                  <Table.Header>
+                    <Table.Row>
+                      <Table.ColumnHeaderCell className="w-8">
+                        <Checkbox size="2" checked={allSelected} onCheckedChange={() => toggleAll()} />
+                      </Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell className="tabular-nums text-base-content/40 w-12">ID</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Fil</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Part</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell justify="end">Belopp</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell justify="end">Kurs</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell justify="end">SEK</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell justify="end">Moms</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Datum</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Typ</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Status</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Åtgärder</Table.ColumnHeaderCell>
+                    </Table.Row>
+                  </Table.Header>
+                  <Table.Body>
                     {filtered.map((doc) => (
-                      <tr
+                      <Table.Row
                         key={doc.id}
-                        className={`hover cursor-pointer ${selectedIds.has(doc.id) ? 'bg-primary/5' : ''}`}
+                        className={cn('cursor-pointer', { 'bg-primary/5': selectedIds.has(doc.id) })}
                         onClick={() => setDetailId(doc.id)}
                       >
-                        <td onClick={(e) => e.stopPropagation()}>
-                          <input
-                            type="checkbox"
-                            className="checkbox checkbox-sm"
-                            checked={selectedIds.has(doc.id)}
-                            onChange={() => toggleOne(doc.id)}
-                          />
-                        </td>
-                        <td className="tabular-nums text-base-content/40">{doc.id}</td>
-                        <td className="text-xs max-w-48 truncate">
+                        <Table.Cell onClick={(e: MouseEvent<HTMLTableDataCellElement>) => e.stopPropagation()}>
+                          <Checkbox size="2" checked={selectedIds.has(doc.id)} onCheckedChange={() => toggleOne(doc.id)} />
+                        </Table.Cell>
+                        <Table.Cell className="tabular-nums text-base-content/40">{doc.id}</Table.Cell>
+                        <Table.Cell className="text-xs max-w-48 truncate">
                           {doc.file_id && doc.filename
                             ? (
-                                <a
-                                  href={`/api/files/${doc.file_id}/view`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="link link-hover link-primary font-mono"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  {doc.filename}
-                                </a>
+                                <RadixLink underline="hover" size="1" className="font-mono" asChild>
+                                  <a
+                                    href={`/api/files/${doc.file_id}/view`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    {doc.filename}
+                                  </a>
+                                </RadixLink>
                               )
                             : '—'}
-                        </td>
-                        <td className="font-medium max-w-28 truncate">
+                        </Table.Cell>
+                        <Table.Cell className="font-medium max-w-28 truncate">
                           {doc.party_id
                             ? (
-                                <Link
-                                  to={`/parties/${doc.party_id}`}
-                                  className="link link-hover link-primary"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  {doc.party_name}
-                                </Link>
+                                <RadixLink underline="hover" asChild>
+                                  <Link
+                                    to={`/parties/${doc.party_id}`}
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    {doc.party_name}
+                                  </Link>
+                                </RadixLink>
                               )
                             : '—'}
-                        </td>
-                        <td className="text-right">
+                        </Table.Cell>
+                        <Table.Cell justify="end">
                           <AmountCell
                             amount={doc.amount_sek ?? doc.amount}
                             currency={doc.currency ?? 'SEK'}
                           />
-                        </td>
-                        <td className="text-right tabular-nums text-nowrap">
+                        </Table.Cell>
+                        <Table.Cell justify="end" className="tabular-nums text-nowrap">
                           {doc.currency && doc.currency !== 'SEK' && doc.matched_txn_amount !== null && doc.amount
                             ? (Math.abs(doc.matched_txn_amount) / Math.abs(doc.amount)).toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                             : ''}
-                        </td>
-                        <td className="text-right tabular-nums text-nowrap">
+                        </Table.Cell>
+                        <Table.Cell justify="end" className="tabular-nums text-nowrap">
                           {doc.currency && doc.currency !== 'SEK' && doc.matched_txn_amount !== null
                             ? `${Math.abs(doc.matched_txn_amount).toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kr`
                             : ''}
-                        </td>
-                        <td className="text-right tabular-nums text-nowrap">
+                        </Table.Cell>
+                        <Table.Cell justify="end" className="tabular-nums text-nowrap">
                           {doc.vat_amount !== null && doc.vat_amount !== 0 && (
                             <span>
                               {Math.abs(doc.vat_amount).toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -448,16 +427,19 @@ export default function Documents() {
                               )}
                             </span>
                           )}
-                        </td>
-                        <td className="tabular-nums text-nowrap">
+                        </Table.Cell>
+                        <Table.Cell className="tabular-nums text-nowrap">
                           <DateCell date={doc.doc_date} />
-                        </td>
-                        <td>
-                          <span className={`badge badge-sm inline-block max-w-28 truncate align-middle ${docTypeBadge[doc.doc_type] ?? 'badge-ghost'}`} title={label.docType(doc.doc_type)}>
-                            {label.docType(doc.doc_type)}
-                          </span>
-                        </td>
-                        <td className="text-nowrap">
+                        </Table.Cell>
+                        <Table.Cell>
+                          <Badge
+                            semantic={docTypeSemantic[doc.doc_type] ?? 'neutral'}
+                            className="max-w-28 truncate"
+                            title={label.docType(doc.doc_type)}
+                            text={label.docType(doc.doc_type)}
+                          />
+                        </Table.Cell>
+                        <Table.Cell className="text-nowrap">
                           <StatusBadge
                             matched={!!doc.is_matched}
                             reviewed={!!doc.reviewed_at}
@@ -465,52 +447,53 @@ export default function Documents() {
                             confidence={doc.match_confidence}
                             docType={doc.doc_type}
                           />
-                        </td>
-                        <td>
+                        </Table.Cell>
+                        <Table.Cell>
                           <div
                             className="flex gap-0.5"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <button
-                              className={`btn btn-xs tooltip ${doc.reviewed_at ? 'btn-success btn-soft' : 'btn-ghost opacity-30'}`}
-                              data-tip={
-                                doc.reviewed_at
-                                  ? 'Ångra granskning'
-                                  : 'Markera granskad'
-                              }
+                            <Button
+                              variant={doc.reviewed_at ? 'soft' : 'ghost'}
+                              {...(doc.reviewed_at ? { semantic: 'success' as const } : {})}
+                              size="1"
+                              className={cn('tooltip', { 'opacity-30': !doc.reviewed_at })}
+                              data-tip={doc.reviewed_at ? 'Ångra granskning' : 'Markera granskad'}
                               onClick={() =>
                                 reviewMutation.mutate({
                                   id: doc.id,
                                   unreview: !!doc.reviewed_at,
                                 })
                               }
-                            >
-                              <Check className="w-4 h-4" />
-                            </button>
+                              icon={<Check />}
+                            />
                             {!doc.is_archived && (
-                              <button
-                                className="btn btn-ghost btn-xs tooltip"
+                              <Button
+                                variant="ghost"
+                                size="1"
+                                className="tooltip"
                                 data-tip="Arkivera"
                                 onClick={() =>
                                   archiveMutation.mutate(doc.id)
                                 }
-                              >
-                                <Archive className="w-4 h-4" />
-                              </button>
+                                icon={<Archive />}
+                              />
                             )}
-                            <button
-                              className="btn btn-ghost btn-xs text-red-400 hover:text-red-600 tooltip"
+                            <Button
+                              variant="ghost"
+                              size="1"
+                              semantic="destructive"
+                              className="tooltip"
                               data-tip="Ta bort"
                               onClick={() => setDeleteTarget(doc)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                              icon={<Trash2 />}
+                            />
                           </div>
-                        </td>
-                      </tr>
+                        </Table.Cell>
+                      </Table.Row>
                     ))}
-                  </tbody>
-                </table>
+                  </Table.Body>
+                </Table.Root>
               </div>
             </div>
           )}
@@ -534,4 +517,3 @@ export default function Documents() {
     </div>
   )
 }
-

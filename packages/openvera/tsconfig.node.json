@@ -1,25 +1,19 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "target": "ES2022",
+    "lib": ["ES2023"],
     "module": "ESNext",
     "skipLibCheck": true,
-    "baseUrl": ".",
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
-    "paths": {
-      "openvera": ["../packages/openvera/src/index.ts"]
-    },
     "isolatedModules": true,
     "moduleDetection": "force",
     "noEmit": true,
-    "jsx": "react-jsx",
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true
   },
-  "include": ["src"]
+  "include": ["vite.config.ts"]
 }
