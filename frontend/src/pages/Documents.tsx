@@ -18,9 +18,9 @@ import {
   getDocuments,
   getParties,
   label,
-  reviewDocument,
   StatusBadge,
   useCompany,
+  verifyDocumentData,
 } from 'openvera'
 
 type DocFilter = 'all' | 'matched' | 'unmatched' | 'reviewed' | 'unreviewed' | 'no_party' | 'archived'
@@ -101,7 +101,7 @@ export default function Documents() {
 
   const reviewMutation = useMutation({
     mutationFn: ({ id, unreview }: { id: number; unreview: boolean }) =>
-      reviewDocument(id, unreview),
+      verifyDocumentData(id, unreview),
     onSuccess: () => {
       invalidate()
       if (detailId) queryClient.invalidateQueries({ queryKey: ['document-detail', detailId] })
@@ -146,7 +146,7 @@ export default function Documents() {
     }
     if (batchDocType !== '') payload.doc_type = batchDocType
     if (batchPartyId !== '') payload.party_id = batchPartyId === 'none' ? null : Number(batchPartyId)
-    if (batchReviewed !== '') payload.reviewed = batchReviewed === 'yes'
+    if (batchReviewed !== '') payload.verified = batchReviewed === 'yes'
     if (batchArchived !== '') payload.archived = batchArchived === 'yes'
     batchMutation.mutate(payload)
   }
@@ -172,9 +172,9 @@ export default function Documents() {
           case 'unmatched':
             return !doc.is_matched
           case 'reviewed':
-            return !!doc.reviewed_at
+            return !!doc.data_verified_at
           case 'unreviewed':
-            return !doc.reviewed_at
+            return !doc.data_verified_at
           case 'no_party':
             return !doc.party_id
           case 'archived':
@@ -228,8 +228,8 @@ export default function Documents() {
             <Select.Item value="all">Alla (ej arkiverade)</Select.Item>
             <Select.Item value="matched">Matchade</Select.Item>
             <Select.Item value="unmatched">Omatchade</Select.Item>
-            <Select.Item value="reviewed">Granskade</Select.Item>
-            <Select.Item value="unreviewed">Ej granskade</Select.Item>
+            <Select.Item value="reviewed">Verifierade</Select.Item>
+            <Select.Item value="unreviewed">Ej verifierade</Select.Item>
             <Select.Item value="no_party">Utan part</Select.Item>
             <Select.Item value="archived">Arkiverade</Select.Item>
           </Select.Content>
@@ -293,10 +293,10 @@ export default function Documents() {
           </Select.Content>
         </Select.Root>
         <Select.Root value={batchReviewed || undefined} onValueChange={(v: string | undefined) => setBatchReviewed(v ?? '')} size="2">
-          <Select.Trigger variant="surface" placeholder="Granskning..." />
+          <Select.Trigger variant="surface" placeholder="Dataverifiering..." />
           <Select.Content>
-            <Select.Item value="yes">Markera granskad</Select.Item>
-            <Select.Item value="no">Ångra granskning</Select.Item>
+            <Select.Item value="yes">Verifiera PDF-data</Select.Item>
+            <Select.Item value="no">Ångra verifiering</Select.Item>
           </Select.Content>
         </Select.Root>
         <Select.Root value={batchArchived || undefined} onValueChange={(v: string | undefined) => setBatchArchived(v ?? '')} size="2">
@@ -442,7 +442,8 @@ export default function Documents() {
                         <Table.Cell className="text-nowrap">
                           <StatusBadge
                             matched={!!doc.is_matched}
-                            reviewed={!!doc.reviewed_at}
+                            dataVerified={!!doc.data_verified_at}
+                            matchApproved={!!doc.is_match_approved || (!!doc.match_count && !doc.has_pending_match_approval)}
                             archived={!!doc.is_archived}
                             confidence={doc.match_confidence}
                             docType={doc.doc_type}
@@ -454,15 +455,15 @@ export default function Documents() {
                             onClick={(e) => e.stopPropagation()}
                           >
                             <Button
-                              variant={doc.reviewed_at ? 'soft' : 'ghost'}
-                              {...(doc.reviewed_at ? { semantic: 'success' as const } : {})}
+                              variant={doc.data_verified_at ? 'soft' : 'ghost'}
+                              {...(doc.data_verified_at ? { semantic: 'success' as const } : {})}
                               size="1"
-                              className={cn('tooltip', { 'opacity-30': !doc.reviewed_at })}
-                              data-tip={doc.reviewed_at ? 'Ångra granskning' : 'Markera granskad'}
+                              className={cn('tooltip', { 'opacity-30': !doc.data_verified_at })}
+                              data-tip={doc.data_verified_at ? 'Ångra verifiering' : 'Verifiera PDF-data'}
                               onClick={() =>
                                 reviewMutation.mutate({
                                   id: doc.id,
-                                  unreview: !!doc.reviewed_at,
+                                  unreview: !!doc.data_verified_at,
                                 })
                               }
                               icon={<Check />}

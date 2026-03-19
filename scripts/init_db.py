@@ -88,6 +88,7 @@ CREATE TABLE IF NOT EXISTS documents (
     net_amount_sek REAL,  -- Net amount in SEK (for foreign-currency documents)
     vat_amount_sek REAL,  -- VAT amount in SEK (for momsdeklaration)
     vat_breakdown_json TEXT,  -- JSON array: [{"rate": 25, "net": 2000.00, "vat": 500.00}, ...]
+    data_verified_at TIMESTAMP,  -- When extracted document data was checked against the PDF
     reviewed_at TIMESTAMP,  -- When the document was reviewed/verified
     match_attempted_at TIMESTAMP,  -- When auto-matching was last attempted
     match_feedback TEXT,  -- Feedback on match suggestions
@@ -111,6 +112,7 @@ CREATE TABLE IF NOT EXISTS matches (
     confidence REAL,  -- 0-100 for auto matches
     matched_by TEXT,  -- 'user', 'system'
     matched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    approved_at TIMESTAMP,  -- When a human approved the match as correct
     FOREIGN KEY (transaction_id) REFERENCES transactions(id),
     FOREIGN KEY (document_id) REFERENCES documents(id),
     UNIQUE(transaction_id, document_id)

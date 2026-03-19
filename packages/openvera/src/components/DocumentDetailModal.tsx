@@ -8,6 +8,7 @@ import {
   ExternalLink,
   EyeOff,
   Link as LinkIcon,
+  Pencil,
   Search,
   Trash2,
   Unlink,
@@ -303,23 +304,40 @@ export default function DocumentDetailModal({ docId, onClose, onUpdated }: Props
                                     Matchning: {mt.match_type} ({Math.round(mt.confidence)}%)
                                   </p>
                                 )}
+                                <p className="text-xs text-base-content/40">
+                                  {mt.approved_at
+                                    ? `Matchning godkänd ${new Date(mt.approved_at).toLocaleString('sv-SE')}`
+                                    : 'Matchning väntar godkännande'}
+                                </p>
                               </div>
                             ))}
                           </div>
                         )}
 
                         {/* Match transaction section (for unmatched matchable docs) */}
-                        {label.isMatchable(doc.doc_type) && !doc.is_matched && (
+                        {label.isMatchable(doc.doc_type) && !doc.is_matched && !!doc.data_verified_at && (
                           <MatchTransactionSection
                             doc={doc}
                             onMatched={invalidate}
                           />
                         )}
 
-                        {/* Review status */}
-                        {doc.reviewed_at && (
+                        {label.isMatchable(doc.doc_type) && !doc.is_matched && !doc.data_verified_at && (
                           <p className="text-xs text-base-content/40">
-                            Granskad:{' '}
+                            Verifiera PDF-data innan du skapar en slutlig matchning.
+                          </p>
+                        )}
+
+                        {/* Review status */}
+                        {doc.data_verified_at && (
+                          <p className="text-xs text-base-content/40">
+                            PDF-data verifierad:{' '}
+                            {new Date(doc.data_verified_at).toLocaleString('sv-SE')}
+                          </p>
+                        )}
+                        {doc.reviewed_at && doc.reviewed_at !== doc.data_verified_at && (
+                          <p className="text-xs text-base-content/40">
+                            Klar for bokforing:{' '}
                             {new Date(doc.reviewed_at).toLocaleString('sv-SE')}
                           </p>
                         )}
@@ -329,15 +347,15 @@ export default function DocumentDetailModal({ docId, onClose, onUpdated }: Props
                     {/* Footer actions */}
                     <Modal.Footer>
                       <div className="flex justify-between w-full">
-                        <Button
-                          variant="ghost"
-                          size="2"
-                          semantic="destructive"
-                          onClick={() => deleteMutation.mutate(doc.id)}
-                          icon={<Trash2 />}
-                          text="Ta bort"
-                        />
                         <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="2"
+                            semantic="destructive"
+                            onClick={() => deleteMutation.mutate(doc.id)}
+                            icon={<Trash2 />}
+                            text="Ta bort"
+                          />
                           {!doc.is_archived && (
                             <Button
                               variant="ghost"
@@ -347,18 +365,27 @@ export default function DocumentDetailModal({ docId, onClose, onUpdated }: Props
                               text="Arkivera"
                             />
                           )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="soft"
+                            size="2"
+                            onClick={() => setEditingDocId(docId)}
+                            icon={<Pencil />}
+                            text="Redigera"
+                          />
                           <Button
                             semantic="action"
                             size="2"
                             onClick={() =>
                               reviewMutation.mutate({
                                 id: doc.id,
-                                unreview: !!doc.reviewed_at,
+                                unreview: !!doc.data_verified_at,
                               })
                             }
                             disabled={reviewMutation.isPending}
-                            icon={doc.reviewed_at ? <EyeOff /> : <Check />}
-                            text={doc.reviewed_at ? 'Ångra granskning' : 'Markera granskad'}
+                            icon={doc.data_verified_at ? <EyeOff /> : <Check />}
+                            text={doc.data_verified_at ? 'Ångra verifiering' : 'Verifiera PDF-data'}
                           />
                         </div>
                       </div>
@@ -446,9 +473,9 @@ function EditDocumentForm({
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div>
-              <label className="label text-sm">Typ</label>
+              <label className="field-label">Typ</label>
               <Select.Root value={docType} onValueChange={(v: string | undefined) => setDocType(v ?? 'invoice')} size="2">
-                <Select.Trigger variant="surface" />
+                <Select.Trigger variant="surface" className="w-full" />
                 <Select.Content>
                   <Select.Item value="invoice">Faktura</Select.Item>
                   <Select.Item value="receipt">Kvitto</Select.Item>
@@ -467,9 +494,9 @@ function EditDocumentForm({
               </Select.Root>
             </div>
             <div>
-              <label className="label text-sm">Part</label>
+              <label className="field-label">Part</label>
               <Select.Root value={partyId || undefined} onValueChange={(v: string | undefined) => setPartyId(v ?? '')} size="2">
-                <Select.Trigger variant="surface" placeholder="— Ingen —" />
+                <Select.Trigger variant="surface" placeholder="— Ingen —" className="w-full" />
                 <Select.Content>
                   {parties.map((p) => (
                     <Select.Item key={p.id} value={String(p.id)}>
@@ -480,7 +507,7 @@ function EditDocumentForm({
               </Select.Root>
             </div>
             <div>
-              <label className="label text-sm">Datum</label>
+              <label className="field-label">Datum</label>
               <TextField.Root
                 size="2"
                 variant="surface"
@@ -492,7 +519,7 @@ function EditDocumentForm({
             {matchable && (
               <>
                 <div>
-                  <label className="label text-sm">Belopp</label>
+                  <label className="field-label">Belopp</label>
                   <TextField.Root
                     size="2"
                     variant="surface"
@@ -503,9 +530,9 @@ function EditDocumentForm({
                   />
                 </div>
                 <div>
-                  <label className="label text-sm">Valuta</label>
+                  <label className="field-label">Valuta</label>
                   <Select.Root value={currency} onValueChange={(v: string | undefined) => setCurrency(v ?? 'SEK')} size="2">
-                    <Select.Trigger variant="surface" />
+                    <Select.Trigger variant="surface" className="w-full" />
                     <Select.Content>
                       <Select.Item value="SEK">SEK</Select.Item>
                       <Select.Item value="EUR">EUR</Select.Item>
@@ -514,7 +541,7 @@ function EditDocumentForm({
                   </Select.Root>
                 </div>
                 <div>
-                  <label className="label text-sm">Förfallodatum</label>
+                  <label className="field-label">Förfallodatum</label>
                   <TextField.Root
                     size="2"
                     variant="surface"
@@ -524,7 +551,7 @@ function EditDocumentForm({
                   />
                 </div>
                 <div>
-                  <label className="label text-sm">Fakturanummer</label>
+                  <label className="field-label">Fakturanummer</label>
                   <TextField.Root
                     size="2"
                     variant="surface"
@@ -533,7 +560,7 @@ function EditDocumentForm({
                   />
                 </div>
                 <div>
-                  <label className="label text-sm">OCR-nummer</label>
+                  <label className="field-label">OCR-nummer</label>
                   <TextField.Root
                     size="2"
                     variant="surface"
@@ -545,7 +572,7 @@ function EditDocumentForm({
             )}
           </div>
           <div>
-            <label className="label text-sm">Anteckningar</label>
+            <label className="field-label">Anteckningar</label>
             <TextArea.Root
               size="2"
               variant="surface"
@@ -558,7 +585,7 @@ function EditDocumentForm({
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="label text-sm">Netto (exkl. moms)</label>
+                  <label className="field-label">Netto (exkl. moms)</label>
                   <TextField.Root
                     size="2"
                     variant="surface"
@@ -569,7 +596,7 @@ function EditDocumentForm({
                   />
                 </div>
                 <div>
-                  <label className="label text-sm">Moms</label>
+                  <label className="field-label">Moms</label>
                   <TextField.Root
                     size="2"
                     variant="surface"
@@ -581,7 +608,7 @@ function EditDocumentForm({
                 </div>
               </div>
               <div>
-                <label className="label text-sm">Momsuppdelning</label>
+                <label className="field-label">Momsuppdelning</label>
                 {breakdown.length > 0 && (
                   <Table.Root size="1">
                     <Table.Header>

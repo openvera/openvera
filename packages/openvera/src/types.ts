@@ -60,6 +60,8 @@ export interface MatchedDocument {
   filename: string | null;
   match_type: string | null;
   confidence: number | null;
+  data_verified_at?: string | null;
+  approved_at?: string | null;
   reviewed_at: string | null;
 }
 
@@ -96,14 +98,20 @@ export interface Document {
   file_id: number | null;
   filepath: string | null;
   filename: string | null;
+  data_verified_at: string | null;
   reviewed_at: string | null;
   match_attempted_at: string | null;
   match_feedback: string | null;
   is_matched: number;
+  is_match_approved?: number;
   is_archived: number;
+  match_count?: number;
+  approved_match_count?: number;
+  has_pending_match_approval?: number;
   match_confidence: number | null;
   match_matched_by: string | null;
   matched_txn_amount: number | null;
+  match_approved_at?: string | null;
   created_at: string;
   needs_review: number | null;
   related_document_id: number | null;
@@ -119,6 +127,7 @@ export interface Match {
   confidence: number | null;
   matched_by: string | null;
   matched_at: string;
+  approved_at?: string | null;
   transaction_date: string;
   reference: string;
   amount: number;
@@ -126,6 +135,8 @@ export interface Match {
   doc_net_amount: number | null;
   doc_vat_amount: number | null;
   doc_currency: string | null;
+  data_verified_at?: string | null;
+  reviewed_at?: string | null;
   party_name: string | null;
   doc_type: string;
   doc_date: string | null;

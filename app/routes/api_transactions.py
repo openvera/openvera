@@ -2,7 +2,16 @@
 
 from flask import Blueprint, jsonify, request
 
-from db import get_db, delete_match, mark_as_transfer, create_match, link_transfers
+from db import (
+    create_match,
+    delete_match,
+    get_db,
+    is_matchable_doc_type,
+    link_transfers,
+    mark_as_transfer,
+    refresh_document_review_state,
+    set_match_approved,
+)
 
 api_transactions_bp = Blueprint('api_transactions', __name__)
 
@@ -206,9 +215,9 @@ def api_transaction_matches(txn_id):
         cursor = conn.cursor()
         cursor.execute("""
             SELECT d.id, d.amount, d.currency, d.doc_date, d.doc_type,
-                   d.reviewed_at, d.net_amount, d.vat_amount,
+                   d.data_verified_at, d.reviewed_at, d.net_amount, d.vat_amount,
                    pa.name as party_name, pa.id as party_id,
-                   f.filename, m.match_type, m.confidence
+                   f.filename, m.match_type, m.confidence, m.approved_at
             FROM documents d
             JOIN matches m ON m.document_id = d.id
             LEFT JOIN files f ON d.file_id = f.id
@@ -231,7 +240,9 @@ def api_transaction_matches(txn_id):
                 'filename': row['filename'],
                 'match_type': row['match_type'],
                 'confidence': row['confidence'],
-                'reviewed_at': row['reviewed_at'],
+                'data_verified_at': row['data_verified_at'],
+                'approved_at': row['approved_at'],
+                'reviewed_at': row['approved_at'],
             })
 
     return jsonify({'matches': docs})
@@ -255,12 +266,48 @@ def api_create_match():
         cursor.execute("SELECT id FROM transactions WHERE id = ?", (transaction_id,))
         if not cursor.fetchone():
             return jsonify({'error': 'Transaktion hittades inte'}), 404
-        cursor.execute("SELECT id FROM documents WHERE id = ?", (document_id,))
-        if not cursor.fetchone():
+        cursor.execute("""
+            SELECT id, doc_type, data_verified_at
+            FROM documents
+            WHERE id = ?
+        """, (document_id,))
+        doc_row = cursor.fetchone()
+        if not doc_row:
             return jsonify({'error': 'Dokument hittades inte'}), 404
+
+    if is_matchable_doc_type(doc_row['doc_type']) and not doc_row['data_verified_at']:
+        return jsonify({'error': 'Verifiera PDF-data innan dokumentet matchas'}), 400
 
     match_id = create_match(transaction_id, document_id, match_type, matched_by, confidence)
     return jsonify({'ok': True, 'match_id': match_id})
+
+
+@api_transactions_bp.route('/api/matches/<int:match_id>/approve', methods=['POST'])
+def api_approve_match(match_id):
+    """Approve or unapprove an existing match."""
+    data = request.get_json() or {}
+    unapprove = data.get('unapprove', False)
+
+    if not unapprove:
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT d.doc_type, d.data_verified_at
+                FROM matches m
+                JOIN documents d ON d.id = m.document_id
+                WHERE m.id = ?
+            """, (match_id,))
+            row = cursor.fetchone()
+            if not row:
+                return jsonify({'error': 'Match hittades inte'}), 404
+            if is_matchable_doc_type(row['doc_type']) and not row['data_verified_at']:
+                return jsonify({'error': 'Verifiera PDF-data innan matchningen godkänns'}), 400
+
+    document_id = set_match_approved(match_id, approved=not unapprove)
+    if document_id is None:
+        return jsonify({'error': 'Match hittades inte'}), 404
+
+    return jsonify({'ok': True, 'approved': not unapprove, 'document_id': document_id})
 
 
 @api_transactions_bp.route('/api/matches')
@@ -290,11 +337,12 @@ def api_list_matches():
 
         cursor.execute(f"""
             SELECT m.id, m.transaction_id, m.document_id, m.match_type,
-                   m.confidence, m.matched_by, m.matched_at,
+                   m.confidence, m.matched_by, m.matched_at, m.approved_at,
                    t.date as transaction_date, t.reference, t.amount,
                    d.doc_type, d.doc_date, d.amount as doc_amount,
                    d.net_amount as doc_net_amount, d.vat_amount as doc_vat_amount,
                    d.currency as doc_currency,
+                   d.data_verified_at, d.reviewed_at,
                    pa.name as party_name,
                    c.slug as company_slug, c.name as company_name
             FROM matches m
@@ -320,6 +368,9 @@ def api_delete_transaction(txn_id):
         if not cursor.fetchone():
             return jsonify({'error': 'Not found'}), 404
 
+        cursor.execute("SELECT document_id FROM matches WHERE transaction_id = ?", (txn_id,))
+        affected_documents = [row['document_id'] for row in cursor.fetchall()]
+
         # Delete matches
         cursor.execute("DELETE FROM matches WHERE transaction_id = ?", (txn_id,))
 
@@ -332,6 +383,9 @@ def api_delete_transaction(txn_id):
 
         # Delete the transaction
         cursor.execute("DELETE FROM transactions WHERE id = ?", (txn_id,))
+
+        for document_id in affected_documents:
+            refresh_document_review_state(conn, document_id)
         conn.commit()
 
     return jsonify({'ok': True})

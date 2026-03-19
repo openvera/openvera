@@ -75,7 +75,7 @@ export default function TransactionDetail() {
 
   const matches = matchData?.matches ?? []
 
-  const allReviewed = matches.length > 0 && matches.every((m) => m.reviewed_at)
+  const allReviewed = matches.length > 0 && matches.every((m) => m.approved_at)
 
   const statusBadge = txn.is_internal_transfer
     ? (

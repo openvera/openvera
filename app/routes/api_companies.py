@@ -8,7 +8,14 @@ import sys
 import os
 
 from config import BASE_DIR
-from db import get_db, get_company, get_accounts, get_account_transactions, generate_slug
+from db import (
+    generate_slug,
+    get_account_transactions,
+    get_accounts,
+    get_company,
+    get_db,
+    refresh_document_review_state,
+)
 from routes.api_parties import parse_patterns
 
 api_companies_bp = Blueprint('api_companies', __name__)
@@ -280,9 +287,16 @@ def api_delete_account(account_id):
         # Get transaction IDs
         cursor.execute("SELECT id FROM transactions WHERE account_id = ?", (account_id,))
         txn_ids = [row['id'] for row in cursor.fetchall()]
+        affected_documents = []
 
         if txn_ids:
             ph = ','.join('?' * len(txn_ids))
+            cursor.execute(f"""
+                SELECT DISTINCT document_id
+                FROM matches
+                WHERE transaction_id IN ({ph})
+            """, txn_ids)
+            affected_documents = [row['document_id'] for row in cursor.fetchall()]
             # Delete transfers
             cursor.execute(f"DELETE FROM transfers WHERE from_transaction_id IN ({ph}) OR to_transaction_id IN ({ph})",
                            txn_ids + txn_ids)
@@ -292,6 +306,9 @@ def api_delete_account(account_id):
             cursor.execute(f"DELETE FROM matches WHERE transaction_id IN ({ph})", txn_ids)
             # Delete transactions
             cursor.execute(f"DELETE FROM transactions WHERE id IN ({ph})", txn_ids)
+
+            for document_id in affected_documents:
+                refresh_document_review_state(conn, document_id)
 
         # Delete account
         cursor.execute("DELETE FROM accounts WHERE id = ?", (account_id,))
@@ -326,7 +343,7 @@ def api_sie_export():
 def api_vat_report():
     """Get VAT report data for momsdeklaration.
 
-    Only includes documents matched via manual/auto matches (excludes suggested).
+    Only includes documents with approved matches.
     Uses cash basis (transaction date) for period filtering.
     Deduplicates by document_id to avoid double-counting.
     """
@@ -344,7 +361,7 @@ def api_vat_report():
         # Deduplicate by document_id — for one-to-many matches, use earliest match
         conditions = [
             "a.company_id = ?",
-            "m.match_type IN ('manual', 'auto')",
+            "m.approved_at IS NOT NULL",
         ]
         params = [company_id]
 

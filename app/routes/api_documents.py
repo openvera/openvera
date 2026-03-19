@@ -8,9 +8,46 @@ import json
 import hashlib
 import os
 from config import FILES_DIR
-from db import get_db, get_or_create_file, insert_document, get_documents, resolve_filepath
+from db import (
+    get_db,
+    get_or_create_file,
+    get_documents,
+    insert_document,
+    refresh_document_review_state,
+    resolve_filepath,
+    set_document_data_verified,
+)
 
 api_documents_bp = Blueprint('api_documents', __name__)
+
+VERIFICATION_INVALIDATING_FIELDS = {
+    'amount',
+    'currency',
+    'doc_date',
+    'due_date',
+    'invoice_number',
+    'ocr_number',
+    'party_id',
+    'doc_type',
+    'net_amount',
+    'vat_amount',
+    'net_amount_sek',
+    'vat_amount_sek',
+    'vat_breakdown_json',
+}
+
+
+def _normalized_update_value(value):
+    return None if value == '' else value
+
+
+def _handle_verify_data(doc_id: int):
+    data = request.get_json() or {}
+    unverify = data.get('unverify', False) or data.get('unreview', False)
+    ok = set_document_data_verified(doc_id, verified=not unverify)
+    if not ok:
+        return jsonify({'success': False, 'error': 'Document not found'}), 404
+    return jsonify({'success': True, 'verified': not unverify})
 
 
 @api_documents_bp.route('/api/documents')
@@ -96,7 +133,7 @@ def api_document_details():
 
         # Check if document is matched and get transaction details
         cursor.execute("""
-            SELECT m.id as match_id, m.confidence, m.match_type,
+            SELECT m.id as match_id, m.confidence, m.match_type, m.approved_at,
                    t.id as txn_id, t.date as txn_date, t.amount as txn_amount,
                    t.reference as txn_reference, a.name as account_name
             FROM matches m
@@ -116,7 +153,8 @@ def api_document_details():
                 'reference': match_row['txn_reference'],
                 'account': match_row['account_name'],
                 'confidence': match_row['confidence'],
-                'match_type': match_row['match_type']
+                'match_type': match_row['match_type'],
+                'approved_at': match_row['approved_at'],
             })
 
         # Parse VAT breakdown if present
@@ -152,6 +190,7 @@ def api_document_details():
             'file_id': row['file_id'],
             'filepath': row['filepath'], 'filename': row['filename'],
             'doc_type': row['doc_type'], 'extracted_json': extracted_json,
+            'data_verified_at': _col('data_verified_at'),
             'reviewed_at': row['reviewed_at'],
             'match_attempted_at': row['match_attempted_at'],
             'match_feedback': row['match_feedback'],
@@ -337,36 +376,69 @@ def api_batch_update_documents():
 
     updates = []
     params = []
+    verification_flag = None
+    verification_invalidated = False
     for field in ('doc_type', 'party_id'):
         if field in data:
             updates.append(f'{field} = ?')
             params.append(data[field])
+            verification_invalidated = True
 
-    if 'reviewed' in data:
-        if data['reviewed']:
-            updates.append('reviewed_at = CURRENT_TIMESTAMP')
-        else:
-            updates.append('reviewed_at = NULL')
+    if 'verified' in data:
+        verification_flag = bool(data['verified'])
+    elif 'reviewed' in data:
+        verification_flag = bool(data['reviewed'])
 
     if 'archived' in data:
         updates.append('archived = ?')
         params.append(1 if data['archived'] else 0)
 
-    if not updates:
+    if not updates and verification_flag is None:
         return jsonify({'error': 'No fields to update'}), 400
 
     placeholders = ','.join('?' for _ in ids)
-    params.extend(ids)
 
     with get_db() as conn:
         cursor = conn.cursor()
-        cursor.execute(f"""
-            UPDATE documents
-            SET {', '.join(updates)}
-            WHERE id IN ({placeholders})
-        """, params)
+        if updates:
+            cursor.execute(f"""
+                UPDATE documents
+                SET {', '.join(updates)}
+                WHERE id IN ({placeholders})
+            """, (*params, *ids))
+            updated = cursor.rowcount
+        else:
+            updated = len(ids)
+
+        if verification_invalidated:
+            cursor.execute(f"""
+                UPDATE documents
+                SET data_verified_at = NULL
+                WHERE id IN ({placeholders})
+            """, ids)
+            cursor.execute(f"""
+                UPDATE matches
+                SET approved_at = NULL
+                WHERE document_id IN ({placeholders})
+            """, ids)
+
+        if verification_flag is not None:
+            if verification_flag:
+                cursor.execute(f"""
+                    UPDATE documents
+                    SET data_verified_at = COALESCE(data_verified_at, CURRENT_TIMESTAMP)
+                    WHERE id IN ({placeholders})
+                """, ids)
+            else:
+                cursor.execute(f"""
+                    UPDATE documents
+                    SET data_verified_at = NULL
+                    WHERE id IN ({placeholders})
+                """, ids)
+
+        for doc_id in ids:
+            refresh_document_review_state(conn, doc_id)
         conn.commit()
-        updated = cursor.rowcount
 
     return jsonify({'ok': True, 'updated': updated})
 
@@ -378,6 +450,17 @@ def api_update_document(doc_id):
 
     with get_db() as conn:
         cursor = conn.cursor()
+        cursor.execute("""
+            SELECT amount, currency, doc_date, due_date, invoice_number, ocr_number,
+                   party_id, doc_type, net_amount, vat_amount, net_amount_sek,
+                   vat_amount_sek, vat_breakdown_json
+            FROM documents
+            WHERE id = ?
+        """, (doc_id,))
+        current = cursor.fetchone()
+        if not current:
+            return jsonify({'error': 'Document not found'}), 404
+
         allowed_fields = ['amount', 'currency', 'doc_date', 'due_date',
                          'invoice_number', 'ocr_number', 'party_id', 'notes', 'doc_type',
                          'net_amount', 'vat_amount', 'net_amount_sek', 'vat_amount_sek',
@@ -385,50 +468,63 @@ def api_update_document(doc_id):
                          'related_document_id', 'match_feedback', 'needs_review']
         updates = []
         values = []
+        verification_invalidated = False
         for field in allowed_fields:
             if field in data:
+                next_value = _normalized_update_value(data[field])
+                if field in VERIFICATION_INVALIDATING_FIELDS and current[field] != next_value:
+                    verification_invalidated = True
                 updates.append(f"{field} = ?")
-                values.append(data[field] if data[field] != '' else None)
+                values.append(next_value)
 
         if 'match_feedback' in data and not data['match_feedback']:
             updates.append("match_attempted_at = NULL")
             cursor.execute("DELETE FROM matches WHERE document_id = ?", (doc_id,))
 
-        if 'reviewed' in data:
-            if data['reviewed']:
-                cursor.execute("SELECT reviewed_at FROM documents WHERE id = ?", (doc_id,))
-                row = cursor.fetchone()
-                if row and not row['reviewed_at']:
-                    updates.append("reviewed_at = CURRENT_TIMESTAMP")
-            else:
-                updates.append("reviewed_at = NULL")
+        if verification_invalidated:
+            cursor.execute("UPDATE matches SET approved_at = NULL WHERE document_id = ?", (doc_id,))
 
-        if not updates:
+        verification_flag = None
+        if 'verified' in data:
+            verification_flag = bool(data['verified'])
+        elif 'reviewed' in data:
+            verification_flag = bool(data['reviewed'])
+
+        if not updates and verification_flag is None and not verification_invalidated:
             return jsonify({'error': 'No fields to update'}), 400
-        values.append(doc_id)
-        cursor.execute(f"UPDATE documents SET {', '.join(updates)} WHERE id = ?", values)
+
+        if updates:
+            values.append(doc_id)
+            cursor.execute(f"UPDATE documents SET {', '.join(updates)} WHERE id = ?", values)
+
+        if verification_invalidated:
+            cursor.execute("UPDATE documents SET data_verified_at = NULL WHERE id = ?", (doc_id,))
+
+        if verification_flag is not None:
+            if verification_flag:
+                cursor.execute("""
+                    UPDATE documents
+                    SET data_verified_at = COALESCE(data_verified_at, CURRENT_TIMESTAMP)
+                    WHERE id = ?
+                """, (doc_id,))
+            else:
+                cursor.execute("UPDATE documents SET data_verified_at = NULL WHERE id = ?", (doc_id,))
+
+        refresh_document_review_state(conn, doc_id)
         conn.commit()
-        return jsonify({'success': True, 'updated': len(updates)})
+        return jsonify({'success': True, 'updated': len(updates) + int(verification_invalidated) + int(verification_flag is not None)})
+
+
+@api_documents_bp.route('/api/document/<int:doc_id>/verify-data', methods=['POST'])
+def api_verify_document_data(doc_id):
+    """Mark document data as verified against the PDF (or undo)."""
+    return _handle_verify_data(doc_id)
 
 
 @api_documents_bp.route('/api/document/<int:doc_id>/review', methods=['POST'])
 def api_review_document(doc_id):
-    """Mark document as reviewed (or unreview)."""
-    data = request.get_json() or {}
-    unreview = data.get('unreview', False)
-
-    with get_db() as conn:
-        cursor = conn.cursor()
-        if unreview:
-            cursor.execute("UPDATE documents SET reviewed_at = NULL WHERE id = ?", (doc_id,))
-        else:
-            cursor.execute("UPDATE documents SET reviewed_at = CURRENT_TIMESTAMP WHERE id = ?", (doc_id,))
-
-        if cursor.rowcount == 0:
-            return jsonify({'success': False, 'error': 'Document not found'}), 404
-
-        conn.commit()
-        return jsonify({'success': True, 'reviewed': not unreview})
+    """Compatibility alias for document data verification."""
+    return _handle_verify_data(doc_id)
 
 
 @api_documents_bp.route('/api/document/<int:doc_id>/archive', methods=['POST'])
@@ -444,6 +540,7 @@ def api_archive_document(doc_id):
             SET doc_type = ?, needs_review = 0, archived = 1
             WHERE id = ?
         """, (doc_type, doc_id))
+        refresh_document_review_state(conn, doc_id)
         conn.commit()
 
     return jsonify({'ok': True})
