@@ -303,23 +303,40 @@ export default function DocumentDetailModal({ docId, onClose, onUpdated }: Props
                                     Matchning: {mt.match_type} ({Math.round(mt.confidence)}%)
                                   </p>
                                 )}
+                                <p className="text-xs text-base-content/40">
+                                  {mt.approved_at
+                                    ? `Matchning godkand ${new Date(mt.approved_at).toLocaleString('sv-SE')}`
+                                    : 'Matchning vantar godkannande'}
+                                </p>
                               </div>
                             ))}
                           </div>
                         )}
 
                         {/* Match transaction section (for unmatched matchable docs) */}
-                        {label.isMatchable(doc.doc_type) && !doc.is_matched && (
+                        {label.isMatchable(doc.doc_type) && !doc.is_matched && !!doc.data_verified_at && (
                           <MatchTransactionSection
                             doc={doc}
                             onMatched={invalidate}
                           />
                         )}
 
-                        {/* Review status */}
-                        {doc.reviewed_at && (
+                        {label.isMatchable(doc.doc_type) && !doc.is_matched && !doc.data_verified_at && (
                           <p className="text-xs text-base-content/40">
-                            Granskad:{' '}
+                            Verifiera PDF-data innan du skapar en slutlig matchning.
+                          </p>
+                        )}
+
+                        {/* Review status */}
+                        {doc.data_verified_at && (
+                          <p className="text-xs text-base-content/40">
+                            PDF-data verifierad:{' '}
+                            {new Date(doc.data_verified_at).toLocaleString('sv-SE')}
+                          </p>
+                        )}
+                        {doc.reviewed_at && doc.reviewed_at !== doc.data_verified_at && (
+                          <p className="text-xs text-base-content/40">
+                            Klar for bokforing:{' '}
                             {new Date(doc.reviewed_at).toLocaleString('sv-SE')}
                           </p>
                         )}
@@ -353,12 +370,12 @@ export default function DocumentDetailModal({ docId, onClose, onUpdated }: Props
                             onClick={() =>
                               reviewMutation.mutate({
                                 id: doc.id,
-                                unreview: !!doc.reviewed_at,
+                                unreview: !!doc.data_verified_at,
                               })
                             }
                             disabled={reviewMutation.isPending}
-                            icon={doc.reviewed_at ? <EyeOff /> : <Check />}
-                            text={doc.reviewed_at ? 'Ångra granskning' : 'Markera granskad'}
+                            icon={doc.data_verified_at ? <EyeOff /> : <Check />}
+                            text={doc.data_verified_at ? 'Ångra verifiering' : 'Verifiera PDF-data'}
                           />
                         </div>
                       </div>

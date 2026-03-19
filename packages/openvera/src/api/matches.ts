@@ -27,6 +27,12 @@ export const createMatch = (data: {
     body: JSON.stringify(data),
   })
 
+export const approveMatch = (matchId: number, unapprove = false) =>
+  api<{ ok: boolean; approved: boolean; document_id: number }>(`/api/matches/${matchId}/approve`, {
+    method: 'POST',
+    body: JSON.stringify({ unapprove }),
+  })
+
 export const unmatch = (transactionId: number, documentId: number) =>
   api<{ ok: boolean }>('/api/unmatch-invoice', {
     method: 'POST',

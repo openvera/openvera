@@ -5,22 +5,25 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CheckCircle, ClipboardCheck, PartyPopper, XCircle } from 'lucide-react'
 import {
   AmountCell,
-  createMatch,
+  approveMatch,
   DateCell,
   DocumentDetailModal,
   EmptyState,
   getDocuments,
   getMatches,
   label,
-  reviewDocument,
   TransactionDetailModal,
   unmatch,
   useCompany,
+  verifyDocumentData,
 } from 'openvera'
+
+type ReviewTab = 'data' | 'matches'
 
 export default function ReviewQueue() {
   const { selected } = useCompany()
   const queryClient = useQueryClient()
+  const [activeTab, setActiveTab] = useState<ReviewTab>('data')
   const [detailDocId, setDetailDocId] = useState<number | null>(null)
   const [detailTxnId, setDetailTxnId] = useState<number | null>(null)
 
@@ -39,15 +42,11 @@ export default function ReviewQueue() {
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ['matches'] })
     queryClient.invalidateQueries({ queryKey: ['documents-review'] })
+    queryClient.invalidateQueries({ queryKey: ['documents'] })
   }
 
   const approveMutation = useMutation({
-    mutationFn: (match: { transaction_id: number; document_id: number }) =>
-      createMatch({
-        transaction_id: match.transaction_id,
-        document_id: match.document_id,
-        match_type: 'approved',
-      }),
+    mutationFn: (matchId: number) => approveMatch(matchId),
     onSuccess: invalidateAll,
   })
 
@@ -57,8 +56,8 @@ export default function ReviewQueue() {
     onSuccess: invalidateAll,
   })
 
-  const reviewMutation = useMutation({
-    mutationFn: (id: number) => reviewDocument(id),
+  const verifyMutation = useMutation({
+    mutationFn: (id: number) => verifyDocumentData(id),
     onSuccess: invalidateAll,
   })
 
@@ -76,16 +75,19 @@ export default function ReviewQueue() {
     )
   }
 
-  const suggested = matches
-    .filter((m) => m.match_type === 'suggested' || m.match_type === 'auto')
-    .sort((a, b) => (b.confidence ?? 0) - (a.confidence ?? 0))
-    .slice(0, 100)
-
-  const unreviewedDocs = documents.filter(
-    (d) => !d.reviewed_at && !d.is_matched && !d.is_archived,
+  const pendingDataVerification = documents.filter(
+    (doc) => !doc.data_verified_at && !doc.is_archived,
   )
 
-  const totalItems = suggested.length + unreviewedDocs.length
+  const pendingMatchApprovals = matches.filter(
+    (match) => !match.approved_at && !!match.data_verified_at,
+  )
+
+  const blockedMatchApprovals = matches.filter(
+    (match) => !match.approved_at && !match.data_verified_at,
+  )
+
+  const totalItems = pendingDataVerification.length + pendingMatchApprovals.length
 
   if (totalItems === 0) {
     return (
@@ -107,14 +109,36 @@ export default function ReviewQueue() {
         <Badge className="tabular-nums">{totalItems} att granska</Badge>
       </div>
 
-      {/* Suggested matches */}
-      {suggested.length > 0 && (
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          size="2"
+          variant={activeTab === 'data' ? 'solid' : 'ghost'}
+          semantic={activeTab === 'data' ? 'action' : undefined}
+          onClick={() => setActiveTab('data')}
+          text={`PDF-data (${pendingDataVerification.length})`}
+        />
+        <Button
+          size="2"
+          variant={activeTab === 'matches' ? 'solid' : 'ghost'}
+          semantic={activeTab === 'matches' ? 'action' : undefined}
+          onClick={() => setActiveTab('matches')}
+          text={`Matchningar (${pendingMatchApprovals.length})`}
+        />
+      </div>
+
+      {activeTab === 'matches' && blockedMatchApprovals.length > 0 && (
+        <p className="text-sm text-base-content/50">
+          {blockedMatchApprovals.length} matchningar väntar fortfarande på dataverifiering av dokumentet.
+        </p>
+      )}
+
+      {activeTab === 'matches' && pendingMatchApprovals.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-sm font-semibold uppercase tracking-wider text-base-content/50">
-            Föreslagna matchningar
+            Matchningar att godkänna
           </h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            {suggested.map((match) => (
+            {pendingMatchApprovals.map((match) => (
               <div
                 key={match.id}
                 className="bg-base-100 rounded-xl shadow-sm overflow-hidden flex flex-col"
@@ -188,7 +212,7 @@ export default function ReviewQueue() {
                     <Button
                       semantic="success"
                       size="1"
-                      onClick={() => approveMutation.mutate({ transaction_id: match.transaction_id, document_id: match.document_id })}
+                      onClick={() => approveMutation.mutate(match.id)}
                       disabled={approveMutation.isPending}
                       icon={<CheckCircle />}
                       text="Godkänn"
@@ -201,13 +225,12 @@ export default function ReviewQueue() {
         </section>
       )}
 
-      {/* Unreviewed documents */}
-      {unreviewedDocs.length > 0 && (
+      {activeTab === 'data' && pendingDataVerification.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-sm font-semibold uppercase tracking-wider text-base-content/50">
-            Ogranskade dokument
+            Dokument att verifiera
             <span className="ml-2 tabular-nums text-base-content/40">
-              ({unreviewedDocs.length})
+              ({pendingDataVerification.length})
             </span>
           </h2>
           <div className="bg-base-100 rounded-xl shadow-sm overflow-hidden">
@@ -224,7 +247,7 @@ export default function ReviewQueue() {
                   </Table.Row>
                 </Table.Header>
                 <Table.Body>
-                  {unreviewedDocs.map((doc) => (
+                  {pendingDataVerification.map((doc) => (
                     <Table.Row
                       key={doc.id}
                       className="cursor-pointer"
@@ -247,10 +270,10 @@ export default function ReviewQueue() {
                         <Button
                           variant="ghost"
                           size="1"
-                          onClick={() => reviewMutation.mutate(doc.id)}
-                          disabled={reviewMutation.isPending}
+                          onClick={() => verifyMutation.mutate(doc.id)}
+                          disabled={verifyMutation.isPending}
                           icon={<ClipboardCheck />}
-                          text="Granskad"
+                          text="Verifiera PDF-data"
                         />
                       </Table.Cell>
                     </Table.Row>
@@ -260,6 +283,20 @@ export default function ReviewQueue() {
             </div>
           </div>
         </section>
+      )}
+
+      {activeTab === 'data' && pendingDataVerification.length === 0 && (
+        <EmptyState
+          title="Ingen PDF-data att verifiera"
+          description="Alla dokument i kön har redan verifierad data."
+        />
+      )}
+
+      {activeTab === 'matches' && pendingMatchApprovals.length === 0 && (
+        <EmptyState
+          title="Inga matchningar att godkänna"
+          description="Det finns inga verifierade dokument med väntande matchgodkännande."
+        />
       )}
 
       <DocumentDetailModal

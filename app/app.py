@@ -43,9 +43,10 @@ app.register_blueprint(api_transactions_bp)
 app.register_blueprint(api_companies_bp)
 app.register_blueprint(api_banking_bp)
 
-# Ensure party slugs are backfilled
-from db import ensure_party_slugs
+# Ensure runtime backfills and compatibility columns are in place
+from db import ensure_party_slugs, ensure_review_workflow_columns
 ensure_party_slugs()
+ensure_review_workflow_columns()
 
 
 # SPA catch-all: serve frontend dist if it exists

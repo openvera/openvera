@@ -10,6 +10,13 @@ from config import DB_PATH, FILES_DIR
 
 import re
 
+MATCHABLE_DOC_TYPES = {
+    'invoice',
+    'receipt',
+    'outgoing_invoice',
+    'credit_note',
+}
+
 def generate_slug(name):
     """Generate URL-friendly slug from a name. Handles Swedish characters."""
     slug = name.lower().strip()
@@ -66,6 +73,157 @@ def ensure_party_slugs():
         conn.commit()
 
 
+def is_matchable_doc_type(doc_type: str | None) -> bool:
+    """Return whether the document type should participate in matching."""
+    return doc_type in MATCHABLE_DOC_TYPES
+
+
+def _table_has_column(cursor, table_name: str, column_name: str) -> bool:
+    cursor.execute(f"PRAGMA table_info({table_name})")
+    return any(row['name'] == column_name for row in cursor.fetchall())
+
+
+def refresh_document_review_state(conn, doc_id: int):
+    """Recompute compatibility reviewed_at from data verification + match approval."""
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT doc_type, data_verified_at
+        FROM documents
+        WHERE id = ?
+    """, (doc_id,))
+    row = cursor.fetchone()
+    if not row:
+        return
+
+    data_verified_at = row['data_verified_at']
+    if not data_verified_at:
+        cursor.execute("UPDATE documents SET reviewed_at = NULL WHERE id = ?", (doc_id,))
+        return
+
+    if not is_matchable_doc_type(row['doc_type']):
+        cursor.execute("UPDATE documents SET reviewed_at = ? WHERE id = ?", (data_verified_at, doc_id))
+        return
+
+    cursor.execute("""
+        SELECT COUNT(*) as match_count,
+               SUM(CASE WHEN approved_at IS NULL THEN 1 ELSE 0 END) as unapproved_count,
+               MAX(approved_at) as last_approved_at
+        FROM matches
+        WHERE document_id = ?
+    """, (doc_id,))
+    match_state = cursor.fetchone()
+
+    match_count = match_state['match_count'] or 0
+    unapproved_count = match_state['unapproved_count'] or 0
+    last_approved_at = match_state['last_approved_at']
+
+    if match_count == 0 or unapproved_count > 0 or not last_approved_at:
+        cursor.execute("UPDATE documents SET reviewed_at = NULL WHERE id = ?", (doc_id,))
+        return
+
+    reviewed_at = max(data_verified_at, last_approved_at)
+    cursor.execute("UPDATE documents SET reviewed_at = ? WHERE id = ?", (reviewed_at, doc_id))
+
+
+def ensure_review_workflow_columns():
+    """Backfill compatibility columns for the split review workflow."""
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        if not _table_has_column(cursor, 'documents', 'data_verified_at'):
+            cursor.execute("ALTER TABLE documents ADD COLUMN data_verified_at TIMESTAMP")
+            conn.commit()
+
+        if not _table_has_column(cursor, 'matches', 'approved_at'):
+            cursor.execute("ALTER TABLE matches ADD COLUMN approved_at TIMESTAMP")
+            conn.commit()
+
+        cursor.execute("""
+            UPDATE documents
+            SET data_verified_at = reviewed_at
+            WHERE data_verified_at IS NULL AND reviewed_at IS NOT NULL
+        """)
+
+        cursor.execute("""
+            UPDATE matches
+            SET approved_at = COALESCE(
+                (SELECT d.reviewed_at FROM documents d WHERE d.id = matches.document_id),
+                matched_at
+            )
+            WHERE approved_at IS NULL
+              AND match_type IN ('manual', 'approved')
+        """)
+
+        cursor.execute("SELECT id FROM documents")
+        for row in cursor.fetchall():
+            refresh_document_review_state(conn, row['id'])
+
+        conn.commit()
+
+
+def set_document_data_verified(doc_id: int, verified: bool = True) -> bool:
+    """Set or clear document data verification."""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        if verified:
+            cursor.execute("""
+                UPDATE documents
+                SET data_verified_at = COALESCE(data_verified_at, CURRENT_TIMESTAMP)
+                WHERE id = ?
+            """, (doc_id,))
+        else:
+            cursor.execute("UPDATE documents SET data_verified_at = NULL WHERE id = ?", (doc_id,))
+
+        if cursor.rowcount == 0:
+            return False
+
+        refresh_document_review_state(conn, doc_id)
+        conn.commit()
+        return True
+
+
+def set_match_approved(match_id: int, approved: bool = True) -> int | None:
+    """Approve or unapprove a match and return the document_id."""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, document_id, match_type FROM matches WHERE id = ?", (match_id,))
+        row = cursor.fetchone()
+        if not row:
+            return None
+
+        if approved:
+            if row['match_type'] in ('suggested', 'auto'):
+                cursor.execute("""
+                    UPDATE matches
+                    SET match_type = 'approved',
+                        approved_at = COALESCE(approved_at, CURRENT_TIMESTAMP)
+                    WHERE id = ?
+                """, (match_id,))
+            else:
+                cursor.execute("""
+                    UPDATE matches
+                    SET approved_at = COALESCE(approved_at, CURRENT_TIMESTAMP)
+                    WHERE id = ?
+                """, (match_id,))
+        else:
+            cursor.execute("UPDATE matches SET approved_at = NULL WHERE id = ?", (match_id,))
+
+        refresh_document_review_state(conn, row['document_id'])
+        conn.commit()
+        return row['document_id']
+
+
+def clear_match_approvals_for_document(conn, doc_id: int):
+    """Clear all match approvals for a document and refresh compatibility state."""
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE matches
+        SET approved_at = NULL
+        WHERE document_id = ?
+    """, (doc_id,))
+    refresh_document_review_state(conn, doc_id)
+
+
 def get_companies():
     """Get all companies."""
     with get_db() as conn:
@@ -117,7 +275,15 @@ def get_account_transactions(account_id, include_transfers=True):
             SELECT t.*,
                    EXISTS(SELECT 1 FROM matches m WHERE m.transaction_id = t.id) as is_matched,
                    (SELECT m.confidence FROM matches m WHERE m.transaction_id = t.id ORDER BY m.confidence DESC LIMIT 1) as match_confidence,
-                   (SELECT d.reviewed_at FROM matches m JOIN documents d ON m.document_id = d.id WHERE m.transaction_id = t.id LIMIT 1) as match_reviewed_at,
+                   (
+                       SELECT CASE
+                           WHEN COUNT(*) = 0 THEN NULL
+                           WHEN SUM(CASE WHEN m.approved_at IS NULL THEN 1 ELSE 0 END) = 0 THEN MAX(m.approved_at)
+                           ELSE NULL
+                       END
+                       FROM matches m
+                       WHERE m.transaction_id = t.id
+                   ) as match_reviewed_at,
                    (SELECT f.filepath FROM matches m
                     JOIN documents d ON m.document_id = d.id
                     LEFT JOIN files f ON d.file_id = f.id
@@ -150,7 +316,15 @@ def get_transactions_by_company(company_id, include_transfers=True):
             SELECT t.*, a.name as account_name,
                    EXISTS(SELECT 1 FROM matches m WHERE m.transaction_id = t.id) as is_matched,
                    (SELECT m.confidence FROM matches m WHERE m.transaction_id = t.id ORDER BY m.confidence DESC LIMIT 1) as match_confidence,
-                   (SELECT d.reviewed_at FROM matches m JOIN documents d ON m.document_id = d.id WHERE m.transaction_id = t.id LIMIT 1) as match_reviewed_at,
+                   (
+                       SELECT CASE
+                           WHEN COUNT(*) = 0 THEN NULL
+                           WHEN SUM(CASE WHEN m.approved_at IS NULL THEN 1 ELSE 0 END) = 0 THEN MAX(m.approved_at)
+                           ELSE NULL
+                       END
+                       FROM matches m
+                       WHERE m.transaction_id = t.id
+                   ) as match_reviewed_at,
                    (SELECT f.filepath FROM matches m
                     JOIN documents d ON m.document_id = d.id
                     LEFT JOIN files f ON d.file_id = f.id
@@ -188,17 +362,21 @@ def get_documents(company_id=None, doc_type=None, unmatched_only=False):
                    c.name as company_name, c.slug as company_slug,
                    EXISTS(SELECT 1 FROM matches m WHERE m.document_id = d.id) as is_matched,
                    COALESCE(d.archived, 0) as is_archived,
+                   (SELECT COUNT(*) FROM matches m WHERE m.document_id = d.id) as match_count,
+                   (SELECT COUNT(*) FROM matches m WHERE m.document_id = d.id AND m.approved_at IS NOT NULL) as approved_match_count,
+                   EXISTS(SELECT 1 FROM matches m WHERE m.document_id = d.id AND m.approved_at IS NULL) as has_pending_match_approval,
                    p.name as party_name, p.slug as party_slug, p.entity_type as party_type, p.default_code as party_default_code,
                    best_match.confidence as match_confidence,
                    best_match.matched_by as match_matched_by,
-                   best_match.txn_amount as matched_txn_amount
+                   best_match.txn_amount as matched_txn_amount,
+                   best_match.approved_at as match_approved_at
             FROM documents d
             JOIN companies c ON d.company_id = c.id
             LEFT JOIN files f ON d.file_id = f.id
             LEFT JOIN parties p ON d.party_id = p.id
             LEFT JOIN (
                 SELECT m.document_id,
-                       m.confidence, m.matched_by,
+                       m.confidence, m.matched_by, m.approved_at,
                        t.amount as txn_amount
                 FROM matches m
                 JOIN transactions t ON m.transaction_id = t.id
@@ -228,14 +406,28 @@ def get_document(doc_id):
         """, (doc_id,))
         return dict_from_row(cursor.fetchone())
 
-def create_match(transaction_id, document_id, match_type='manual', matched_by='user', confidence=None):
+def create_match(transaction_id, document_id, match_type='manual', matched_by='user', confidence=None, approved=None):
     """Create a match between a transaction and document."""
     with get_db() as conn:
         cursor = conn.cursor()
+        if approved is None:
+            approved = match_type in ('manual', 'approved')
+
         cursor.execute("""
-            INSERT OR REPLACE INTO matches (transaction_id, document_id, match_type, matched_by, confidence)
-            VALUES (?, ?, ?, ?, ?)
-        """, (transaction_id, document_id, match_type, matched_by, confidence))
+            INSERT INTO matches (
+                transaction_id, document_id, match_type, matched_by, confidence, approved_at
+            )
+            VALUES (?, ?, ?, ?, ?, CASE WHEN ? THEN CURRENT_TIMESTAMP ELSE NULL END)
+            ON CONFLICT(transaction_id, document_id) DO UPDATE SET
+                match_type = excluded.match_type,
+                matched_by = excluded.matched_by,
+                confidence = excluded.confidence,
+                approved_at = CASE
+                    WHEN excluded.approved_at IS NOT NULL THEN excluded.approved_at
+                    WHEN excluded.match_type IN ('manual', 'approved') THEN matches.approved_at
+                    ELSE NULL
+                END
+        """, (transaction_id, document_id, match_type, matched_by, confidence, 1 if approved else 0))
 
         # Propagate party default_code to transaction if not already set
         cursor.execute("""
@@ -249,8 +441,17 @@ def create_match(transaction_id, document_id, match_type='manual', matched_by='u
             WHERE id = ? AND accounting_code IS NULL
         """, (document_id, transaction_id))
 
+        cursor.execute("""
+            SELECT id
+            FROM matches
+            WHERE transaction_id = ? AND document_id = ?
+        """, (transaction_id, document_id))
+        match_id = cursor.fetchone()['id']
+
+        refresh_document_review_state(conn, document_id)
+
         conn.commit()
-        return cursor.lastrowid
+        return match_id
 
 def delete_match(transaction_id, document_id):
     """Delete a match."""
@@ -259,6 +460,7 @@ def delete_match(transaction_id, document_id):
         cursor.execute("""
             DELETE FROM matches WHERE transaction_id = ? AND document_id = ?
         """, (transaction_id, document_id))
+        refresh_document_review_state(conn, document_id)
         conn.commit()
 
 def mark_as_transfer(transaction_id, is_transfer=True):

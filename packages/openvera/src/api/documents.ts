@@ -27,11 +27,14 @@ export const updateDocument = (
     { method: 'POST', body: JSON.stringify(data) },
   )
 
-export const reviewDocument = (id: number, unreview = false) =>
-  api<{ success: boolean; reviewed: boolean }>(
-    `/api/document/${id}/review`,
-    { method: 'POST', body: JSON.stringify({ unreview }) },
+export const verifyDocumentData = (id: number, unverify = false) =>
+  api<{ success: boolean; verified: boolean }>(
+    `/api/document/${id}/verify-data`,
+    { method: 'POST', body: JSON.stringify({ unverify }) },
   )
+
+export const reviewDocument = (id: number, unreview = false) =>
+  verifyDocumentData(id, unreview)
 
 export const archiveDocument = (id: number, docType = 'archive') =>
   api<{ ok: boolean }>(`/api/document/${id}/archive`, {
@@ -46,6 +49,7 @@ export const batchUpdateDocuments = (data: {
   ids: number[];
   doc_type?: string | null;
   party_id?: number | null;
+  verified?: boolean;
   reviewed?: boolean;
   archived?: boolean;
 }) =>

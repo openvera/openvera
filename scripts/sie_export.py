@@ -62,7 +62,7 @@ def generate_sie4(company_id, year_from, year_to):
     transactions = cur.fetchall()
 
     # Load matched document VAT data per transaction
-    # Only manual/auto matches (exclude suggested)
+    # Only approved matches participate in accounting export
     # For one-to-many (one doc, multiple txns), allocate full VAT to earliest match
     txn_ids = [t['id'] for t in transactions]
     txn_vat = {}  # txn_id -> list of {vat_sek, net_sek, currency, vat_breakdown_json, doc_type}
@@ -77,11 +77,11 @@ def generate_sie4(company_id, year_from, year_to):
                    m.matched_at,
                    (SELECT COUNT(*) FROM matches m2
                     WHERE m2.document_id = d.id
-                      AND m2.match_type IN ('manual', 'auto')) as match_count
+                      AND m2.approved_at IS NOT NULL) as match_count
             FROM matches m
             JOIN documents d ON m.document_id = d.id
             WHERE m.transaction_id IN ({placeholders})
-              AND m.match_type IN ('manual', 'auto')
+              AND m.approved_at IS NOT NULL
             ORDER BY m.matched_at ASC
         """, txn_ids)
 
