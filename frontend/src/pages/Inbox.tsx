@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import type { CheckedState } from '@radix-ui/react-checkbox'
 import { Link as RadixLink, Spinner } from '@radix-ui/themes'
 import { Badge, Button, Callout, LabelledCheckbox, Table } from '@swedev/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -173,7 +172,7 @@ export default function Inbox() {
             <LabelledCheckbox
               size="1"
               checked={showDuplicates}
-              onCheckedChange={(v: CheckedState) => setShowDuplicates(v === true)}
+              onCheckedChange={(v: boolean | 'indeterminate') => setShowDuplicates(v === true)}
               label={`Visa ${duplicateCount} dubletter`}
             />
           )}

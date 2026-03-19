@@ -8,7 +8,6 @@ import {
   ExternalLink,
   EyeOff,
   Link as LinkIcon,
-  Pencil,
   Search,
   Trash2,
   Unlink,
@@ -114,16 +113,7 @@ export default function DocumentDetailModal({ docId, onClose, onUpdated }: Props
               setEditingDocId(null)
               onClose()
             }}
-          >
-            {doc && !editing && (
-              <Button
-                variant="ghost"
-                size="1"
-                onClick={() => setEditingDocId(docId)}
-                icon={<Pencil />}
-              />
-            )}
-          </Modal.Header>
+          />
 
           {isLoading || !doc
             ? (

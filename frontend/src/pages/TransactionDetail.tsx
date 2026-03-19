@@ -1,6 +1,5 @@
 import { type ChangeEvent, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
-import type { CheckedState } from '@radix-ui/react-checkbox'
 import { Link as RadixLink, Spinner } from '@radix-ui/themes'
 import { Badge, Button, LabelledCheckbox, Select, TextArea } from '@swedev/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -399,13 +398,13 @@ function TransactionForm({
         <LabelledCheckbox
           size="2"
           checked={isTransfer}
-          onCheckedChange={(v: CheckedState) => setIsTransfer(v === true)}
+          onCheckedChange={(v: boolean | 'indeterminate') => setIsTransfer(v === true)}
           label="Intern överföring"
         />
         <LabelledCheckbox
           size="2"
           checked={needsReceipt}
-          onCheckedChange={(v: CheckedState) => setNeedsReceipt(v === true)}
+          onCheckedChange={(v: boolean | 'indeterminate') => setNeedsReceipt(v === true)}
           label="Behöver underlag"
         />
       </div>

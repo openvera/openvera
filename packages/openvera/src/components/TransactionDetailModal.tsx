@@ -1,6 +1,5 @@
-import { Button, Modal } from '@swedev/ui'
+import { Modal } from '@swedev/ui'
 import { useQuery } from '@tanstack/react-query'
-import { ExternalLink } from 'lucide-react'
 
 import { getTransaction } from '../api/transactions'
 import { label } from '../labels'
@@ -31,17 +30,7 @@ export default function TransactionDetailModal({ txnId, onClose }: Props) {
             }
             closeButton
             onClose={onClose}
-          >
-            <Button
-              variant="ghost"
-              size="1"
-              icon={<ExternalLink />}
-              onClick={() => {
-                onClose()
-                window.location.href = `/transactions/${txnId}`
-              }}
-            />
-          </Modal.Header>
+          />
 
           <Modal.Body>
             {isLoading || !txn

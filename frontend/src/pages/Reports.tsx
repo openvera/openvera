@@ -1,6 +1,6 @@
 import { type ChangeEvent, useState } from 'react'
 import { Spinner } from '@radix-ui/themes'
-import { Button, Table, TextField } from '@swedev/ui'
+import { Table, TextField } from '@swedev/ui'
 import { useQuery } from '@tanstack/react-query'
 import { FileOutput } from 'lucide-react'
 import { AmountCell, EmptyState, getReport, getSieExportUrl, getVatReport, useCompany } from 'openvera'
@@ -39,14 +39,14 @@ export default function Reports() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="page-title">Rapporter</h1>
-        <Button
-          variant="outline"
-          size="2"
+        <a
           href={getSieExportUrl(selected.id, currentYear)}
           download
-          icon={<FileOutput />}
-          text="Exportera SIE4"
-        />
+          className="btn btn-outline btn-sm inline-flex items-center gap-2"
+        >
+          <FileOutput className="w-4 h-4" />
+          Exportera SIE4
+        </a>
       </div>
 
       <div className="flex gap-3 items-end">

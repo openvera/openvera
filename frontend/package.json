@@ -15,6 +15,12 @@
   "knip": {
     "ignoreDependencies": [
       "openvera"
+    ],
+    "ignoreBinaries": [
+      "eslint",
+      "knip",
+      "tsc",
+      "vite"
     ]
   },
   "dependencies": {
