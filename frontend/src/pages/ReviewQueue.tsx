@@ -266,14 +266,13 @@ export default function ReviewQueue() {
                       <Table.Cell>
                         <Badge semantic="neutral" text={label.docType(doc.doc_type)} />
                       </Table.Cell>
-                      <Table.Cell onClick={(e) => e.stopPropagation()}>
+                      <Table.Cell>
                         <Button
                           variant="ghost"
                           size="1"
-                          onClick={() => verifyMutation.mutate(doc.id)}
-                          disabled={verifyMutation.isPending}
+                          onClick={() => setDetailDocId(doc.id)}
                           icon={<ClipboardCheck />}
-                          text="Verifiera PDF-data"
+                          text="Granska"
                         />
                       </Table.Cell>
                     </Table.Row>
