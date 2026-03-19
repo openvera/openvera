@@ -5,6 +5,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Archive,
   Check,
+  ChevronDown,
+  ChevronRight,
   ExternalLink,
   EyeOff,
   Link as LinkIcon,
@@ -712,6 +714,8 @@ function MatchTransactionSection({
   const [candidates, setCandidates] = useState<TransactionSearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
+  const [lastQuery, setLastQuery] = useState<string | null>(null)
+  const [isExpanded, setIsExpanded] = useState(true)
   const queryClient = useQueryClient()
 
   const matchMutation = useMutation({
@@ -723,18 +727,23 @@ function MatchTransactionSection({
     },
   })
 
-  const doSearch = useCallback(async (q?: string) => {
+  const doSearch = useCallback(async (q?: string, isAutoSearch?: boolean) => {
     setIsSearching(true)
+    const trimmed = q?.trim() || null
+    setLastQuery(trimmed)
     try {
       const results = await searchTransactions({
         company_id: doc.company_id,
         amount: doc.amount ?? undefined,
         date: doc.doc_date ?? undefined,
         doc_type: doc.doc_type ?? undefined,
-        q: q || undefined,
+        q: trimmed || undefined,
       })
       setCandidates(results)
       setHasSearched(true)
+      if (isAutoSearch) {
+        setIsExpanded(results.length > 0)
+      }
     } finally {
       setIsSearching(false)
     }
@@ -743,101 +752,120 @@ function MatchTransactionSection({
   // Auto-search on mount if we have an amount
   useEffect(() => {
     if (doc.amount !== null && doc.amount !== undefined) {
-      void doSearch()
+      void doSearch(undefined, true)
     }
   }, [doc.amount, doSearch])
 
+  const CollapseIcon = isExpanded ? ChevronDown : ChevronRight
+
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-2">
-        <dt className="text-xs font-semibold uppercase tracking-wider text-base-content/40">
+      <button
+        type="button"
+        className="flex items-center gap-1 group cursor-pointer"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <CollapseIcon className="w-3 h-3 text-base-content/30 group-hover:text-base-content/60 transition-colors" />
+        <dt className="text-xs font-semibold uppercase tracking-wider text-base-content/40 group-hover:text-base-content/60 transition-colors">
           <LinkIcon className="w-3 h-3 inline mr-1" />
           Matcha med transaktion
         </dt>
-      </div>
+      </button>
 
-      {/* Search input */}
-      <div className="flex gap-2">
-        <TextField.Root
-          size="2"
-          variant="surface"
-          className="flex-1"
-          placeholder="Sök referens..."
-          value={searchQuery}
-          onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-            if (e.key === 'Enter') doSearch(searchQuery)
-          }}
-        >
-          <TextField.Slot side="left">
-            <Search className="w-3.5 h-3.5 opacity-30" />
-          </TextField.Slot>
-        </TextField.Root>
-        <Button
-          variant="ghost"
-          size="2"
-          onClick={() => doSearch(searchQuery)}
-          disabled={isSearching}
-          loading={isSearching}
-          text="Sök"
-        />
-      </div>
+      {isExpanded && (
+        <>
+          {/* Search input */}
+          <div className="flex gap-2">
+            <TextField.Root
+              size="2"
+              variant="surface"
+              className="flex-1"
+              placeholder="Sök referens..."
+              value={searchQuery}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+              onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                if (e.key === 'Enter' && !isSearching) doSearch(searchQuery)
+              }}
+            >
+              <TextField.Slot side="left">
+                <Search className="w-3.5 h-3.5 opacity-30" />
+              </TextField.Slot>
+            </TextField.Root>
+            <Button
+              variant="ghost"
+              size="2"
+              onClick={() => doSearch(searchQuery)}
+              disabled={isSearching}
+              loading={isSearching}
+              text="Sök"
+            />
+          </div>
 
-      {/* Results */}
-      {hasSearched && candidates.length === 0 && (
-        <p className="text-xs text-base-content/40 py-1">
-          Inga matchande transaktioner hittades.
-        </p>
-      )}
-      {candidates.length > 0 && (
-        <div className="overflow-x-auto max-h-48 overflow-y-auto">
-          <Table.Root size="1">
-            <Table.Header>
-              <Table.Row>
-                <Table.ColumnHeaderCell>Datum</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell>Referens</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell justify="end">Belopp</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell>Konto</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell />
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {candidates.map((txn) => (
-                <Table.Row key={txn.id}>
-                  <Table.Cell className="text-nowrap">
-                    {txn.date}
-                    {doc.doc_date && txn.date && (() => {
-                      const diff = Math.round((new Date(txn.date).getTime() - new Date(doc.doc_date).getTime()) / 86400000)
-                      return (
-                        <span className="ml-1 text-base-content/30">
-                          ({diff >= 0 ? '+' : ''}{diff})
-                        </span>
-                      )
-                    })()}
-                  </Table.Cell>
-                  <Table.Cell className="max-w-40 truncate" title={txn.reference}>
-                    {txn.reference}
-                  </Table.Cell>
-                  <Table.Cell justify="end" className="tabular-nums text-nowrap">
-                    {Number(txn.amount).toLocaleString('sv-SE', { minimumFractionDigits: 2 })} kr
-                  </Table.Cell>
-                  <Table.Cell className="text-nowrap">{txn.account_name}</Table.Cell>
-                  <Table.Cell>
-                    <Button
-                      variant="ghost"
-                      size="1"
-                      semantic="action"
-                      onClick={() => matchMutation.mutate(txn.id)}
-                      disabled={matchMutation.isPending}
-                      icon={<LinkIcon />}
-                      text="Matcha"
-                    />
-                  </Table.Cell>
-                </Table.Row>
-              ))}
-            </Table.Body>
-          </Table.Root>
-        </div>
+          {/* Results */}
+          {isSearching && (
+            <div className="flex items-center gap-2 py-1">
+              <span className="loading loading-spinner loading-xs" />
+              <span className="text-xs text-base-content/40">Söker...</span>
+            </div>
+          )}
+          {!isSearching && hasSearched && candidates.length === 0 && (
+            <p className="text-xs text-base-content/40 py-1">
+              {lastQuery
+                ? <>Inga resultat för &laquo;{lastQuery}&raquo;</>
+                : 'Inga matchande transaktioner hittades.'}
+            </p>
+          )}
+          {candidates.length > 0 && (
+            <div className="overflow-x-auto max-h-48 overflow-y-auto">
+              <Table.Root size="1">
+                <Table.Header>
+                  <Table.Row>
+                    <Table.ColumnHeaderCell>Datum</Table.ColumnHeaderCell>
+                    <Table.ColumnHeaderCell>Referens</Table.ColumnHeaderCell>
+                    <Table.ColumnHeaderCell justify="end">Belopp</Table.ColumnHeaderCell>
+                    <Table.ColumnHeaderCell>Konto</Table.ColumnHeaderCell>
+                    <Table.ColumnHeaderCell />
+                  </Table.Row>
+                </Table.Header>
+                <Table.Body>
+                  {candidates.map((txn) => (
+                    <Table.Row key={txn.id}>
+                      <Table.Cell className="text-nowrap">
+                        {txn.date}
+                        {doc.doc_date && txn.date && (() => {
+                          const diff = Math.round((new Date(txn.date).getTime() - new Date(doc.doc_date).getTime()) / 86400000)
+                          return (
+                            <span className="ml-1 text-base-content/30">
+                              ({diff >= 0 ? '+' : ''}{diff})
+                            </span>
+                          )
+                        })()}
+                      </Table.Cell>
+                      <Table.Cell className="max-w-40 truncate" title={txn.reference}>
+                        {txn.reference}
+                      </Table.Cell>
+                      <Table.Cell justify="end" className="tabular-nums text-nowrap">
+                        {Number(txn.amount).toLocaleString('sv-SE', { minimumFractionDigits: 2 })} kr
+                      </Table.Cell>
+                      <Table.Cell className="text-nowrap">{txn.account_name}</Table.Cell>
+                      <Table.Cell>
+                        <Button
+                          variant="ghost"
+                          size="1"
+                          semantic="action"
+                          onClick={() => matchMutation.mutate(txn.id)}
+                          disabled={matchMutation.isPending}
+                          icon={<LinkIcon />}
+                          text="Matcha"
+                        />
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Root>
+            </div>
+          )}
+        </>
       )}
     </div>
   )
