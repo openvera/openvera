@@ -81,6 +81,7 @@ def api_add_party():
     company_id = data.get('company_id')
     relationships = data.get('relationships', [])
     patterns_str = data.get('patterns', '')
+    default_code = data.get('default_code')
 
     if entity_type in ('vendor', 'both'):
         if 'vendor' not in relationships:
@@ -108,12 +109,14 @@ def api_add_party():
             counter += 1
 
         cursor.execute("""
-            INSERT INTO parties (name, entity_type, patterns, slug)
-            VALUES (?, ?, ?, ?)
-        """, (name, entity_type, json.dumps(patterns), slug))
+            INSERT INTO parties (name, entity_type, patterns, slug, default_code)
+            VALUES (?, ?, ?, ?, ?)
+        """, (name, entity_type, json.dumps(patterns), slug, default_code))
         party_id = cursor.lastrowid
 
-        if company_id and relationships:
+        if company_id:
+            if not relationships:
+                relationships = ['vendor']
             for rel in relationships:
                 cursor.execute("""
                     INSERT OR IGNORE INTO party_relations (company_id, party_id, relationship)

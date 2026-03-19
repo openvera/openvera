@@ -254,6 +254,7 @@ BAS_ACCOUNTS_SEED = [
     ('6570', 'Bankkostnader', None),
     ('7010', 'Löner till tjänstemän', None),
     ('7510', 'Arbetsgivaravgifter', None),
+    ('7690', 'Övriga personalkostnader', None),
     ('8423', 'Räntekostnader för kortfristiga skulder', None),
 ]
 

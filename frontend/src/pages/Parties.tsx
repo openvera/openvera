@@ -458,15 +458,15 @@ function PartyForm({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="label text-sm">Namn</label>
+      <div className="grid grid-cols-10 gap-4">
+        <div className="col-span-4">
+          <label className="field-label">Namn</label>
           <TextField.Root size="2" variant="surface" value={name} onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)} />
         </div>
-        <div>
-          <label className="label text-sm">Typ</label>
+        <div className="col-span-3">
+          <label className="field-label">Typ</label>
           <Select.Root value={entityType} onValueChange={(v: string | undefined) => setEntityType(v ?? 'business')} size="2">
-            <Select.Trigger variant="surface" />
+            <Select.Trigger variant="surface" className="w-full" />
             <Select.Content>
               <Select.Item value="business">Företag</Select.Item>
               <Select.Item value="person">Person</Select.Item>
@@ -475,10 +475,10 @@ function PartyForm({
             </Select.Content>
           </Select.Root>
         </div>
-        <div>
-          <label className="label text-sm">Kontokod (BAS)</label>
+        <div className="col-span-3">
+          <label className="field-label">Kontokod (BAS)</label>
           <Select.Root value={defaultCode || undefined} onValueChange={(v: string | undefined) => setDefaultCode(v === '__clear__' ? '' : (v ?? ''))} size="2">
-            <Select.Trigger variant="surface" placeholder="Ingen" />
+            <Select.Trigger variant="surface" className="w-full" placeholder="Ingen" />
             <Select.Content>
               <Select.Item value="__clear__">Ingen</Select.Item>
               {basAccounts.map((a) => (
@@ -491,7 +491,7 @@ function PartyForm({
         </div>
       </div>
       <div>
-        <label className="label text-sm">Mönster (ett per rad)</label>
+        <label className="field-label">Mönster (ett per rad)</label>
         <TextArea.Root size="2" variant="surface" rows={3} value={patterns} onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setPatterns(e.target.value)} placeholder={'LEVERANTÖR AB\nLEV-NR 12345'} />
       </div>
     </div>

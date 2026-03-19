@@ -4,7 +4,7 @@
 
 ## Overview
 
-OpenVera is an open-source Swedish bookkeeping system (bokforingssystem) for small businesses. It uses a Flask backend with SQLite and a React + Tailwind frontend. Core capabilities:
+OpenVera is an open-source Swedish bookkeeping system (bokföringssystem) for small businesses. It uses a Flask backend with SQLite and a React + Tailwind frontend. Core capabilities:
 
 - **Transaction ingestion** — Import and classify bank transactions
 - **Document parsing and matching** — Process invoices, receipts, and contracts; match them to transactions
