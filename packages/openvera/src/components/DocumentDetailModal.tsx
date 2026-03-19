@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import React, { type ChangeEvent, useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router'
+import { Button, Modal, Select, Table, TextArea, TextField } from '@swedev/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Archive,
@@ -11,7 +12,6 @@ import {
   Search,
   Trash2,
   Unlink,
-  X,
 } from 'lucide-react'
 
 import {
@@ -34,18 +34,10 @@ interface Props {
 
 export default function DocumentDetailModal({ docId, onClose, onUpdated }: Props) {
   const queryClient = useQueryClient()
-  const dialogRef = useRef<HTMLDialogElement>(null)
   const [editingDocId, setEditingDocId] = useState<number | null>(null)
 
   const open = docId !== null
   const editing = docId !== null && editingDocId === docId
-
-  useEffect(() => {
-    const dialog = dialogRef.current
-    if (!dialog) return
-    if (open && !dialog.open) dialog.showModal()
-    if (!open && dialog.open) dialog.close()
-  }, [open])
 
   const { data: detail, isLoading } = useQuery({
     queryKey: ['document-detail', docId],
@@ -98,42 +90,48 @@ export default function DocumentDetailModal({ docId, onClose, onUpdated }: Props
   const doc = detail as any
 
   return (
-    <dialog ref={dialogRef} className="modal" onClose={onClose}>
+    <Modal.Root
+      open={open}
+      onOpenChange={(v: boolean) => {
+        if (!v) {
+          setEditingDocId(null)
+          onClose()
+        }
+      }}
+      size="3"
+    >
       {open && (
-        <div className="modal-box max-w-3xl rounded-2xl p-0">
+        <>
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-base-200">
-            <h3 className="font-bold text-lg">
-              {isLoading
+          <Modal.Header
+            title={
+              isLoading
                 ? 'Laddar...'
-                : (doc?.party_name ?? doc?.filename ?? 'Dokument')}
-            </h3>
-            <div className="flex gap-1">
-              {doc && !editing && (
-                <button
-                  className="btn btn-ghost btn-sm btn-square"
-                  onClick={() => setEditingDocId(docId)}
-                >
-                  <Pencil className="w-4 h-4" />
-                </button>
-              )}
-              <button
-                className="btn btn-ghost btn-sm btn-square"
-                onClick={() => {
-                  setEditingDocId(null)
-                  onClose()
-                }}
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
+                : `#${doc?.id} ${doc?.party_name ?? doc?.filename ?? 'Dokument'}`
+            }
+            closeButton
+            onClose={() => {
+              setEditingDocId(null)
+              onClose()
+            }}
+          >
+            {doc && !editing && (
+              <Button
+                variant="ghost"
+                size="1"
+                onClick={() => setEditingDocId(docId)}
+                icon={<Pencil />}
+              />
+            )}
+          </Modal.Header>
 
           {isLoading || !doc
             ? (
-                <div className="flex justify-center py-12">
-                  <span className="loading loading-spinner loading-md" />
-                </div>
+                <Modal.Body>
+                  <div className="flex justify-center py-12">
+                    <span className="loading loading-spinner loading-md" />
+                  </div>
+                </Modal.Body>
               )
             : editing
               ? (
@@ -148,239 +146,238 @@ export default function DocumentDetailModal({ docId, onClose, onUpdated }: Props
               : (
                   <>
                     {/* Body */}
-                    <div className="px-6 py-5 space-y-5">
-                      {/* File link */}
-                      {doc.file_id && doc.filename && (
-                        <a
-                          href={`/api/files/${doc.file_id}/view`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                          {doc.filename}
-                        </a>
-                      )}
+                    <Modal.Body>
+                      <div className="space-y-5">
+                        {/* File link */}
+                        {doc.file_id && doc.filename && (
+                          <a
+                            href={`/api/files/${doc.file_id}/view`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                            {doc.filename}
+                          </a>
+                        )}
 
-                      {/* Document info */}
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                        <Field
-                          label="Typ"
-                          value={label.docType(doc.doc_type)}
-                        />
-                        <div>
-                          <dt className="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-0.5">
-                            Part
-                          </dt>
-                          <dd className="text-base-content/80">
-                            {doc.party_id
-                              ? (
-                                  <Link
-                                    to={`/parties/${doc.party_id}`}
-                                    className="link link-hover link-primary"
-                                  >
-                                    {doc.party_name}
-                                  </Link>
-                                )
-                              : '—'}
-                          </dd>
+                        {/* Document info */}
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                          <Field
+                            label="Typ"
+                            value={label.docType(doc.doc_type)}
+                          />
+                          <div>
+                            <dt className="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-0.5">
+                              Part
+                            </dt>
+                            <dd className="text-base-content/80">
+                              {doc.party_id
+                                ? (
+                                    <Link
+                                      to={`/parties/${doc.party_id}`}
+                                      className="link link-hover link-primary"
+                                    >
+                                      {doc.party_name}
+                                    </Link>
+                                  )
+                                : '—'}
+                            </dd>
+                          </div>
+                          <Field label="Datum" value={doc.doc_date} />
+                          {label.isMatchable(doc.doc_type) && (
+                            <>
+                              <Field
+                                label="Belopp"
+                                value={
+                                  doc.amount !== null && doc.amount !== undefined
+                                    ? `${Number(doc.amount).toLocaleString('sv-SE', { minimumFractionDigits: 2 })} ${doc.currency ?? 'SEK'}`
+                                    : null
+                                }
+                              />
+                              {doc.net_amount !== null && doc.net_amount !== undefined && doc.vat_amount !== null && doc.vat_amount !== undefined && (
+                                <>
+                                  <Field
+                                    label="Netto (exkl. moms)"
+                                    value={`${Number(doc.net_amount).toLocaleString('sv-SE', { minimumFractionDigits: 2 })} ${doc.currency ?? 'SEK'}`}
+                                  />
+                                  <Field
+                                    label="Moms"
+                                    value={`${Number(doc.vat_amount).toLocaleString('sv-SE', { minimumFractionDigits: 2 })} ${doc.currency ?? 'SEK'}`}
+                                  />
+                                </>
+                              )}
+                              <Field label="Förfallodatum" value={doc.due_date} />
+                              <Field
+                                label="Fakturanummer"
+                                value={doc.invoice_number}
+                              />
+                              <Field label="OCR-nummer" value={doc.ocr_number} />
+                            </>
+                          )}
                         </div>
-                        <Field label="Datum" value={doc.doc_date} />
-                        {label.isMatchable(doc.doc_type) && (
-                          <>
-                            <Field
-                              label="Belopp"
-                              value={
-                                doc.amount !== null && doc.amount !== undefined
-                                  ? `${Number(doc.amount).toLocaleString('sv-SE', { minimumFractionDigits: 2 })} ${doc.currency ?? 'SEK'}`
-                                  : null
-                              }
-                            />
-                            {doc.net_amount !== null && doc.net_amount !== undefined && doc.vat_amount !== null && doc.vat_amount !== undefined && (
-                              <>
-                                <Field
-                                  label="Netto (exkl. moms)"
-                                  value={`${Number(doc.net_amount).toLocaleString('sv-SE', { minimumFractionDigits: 2 })} ${doc.currency ?? 'SEK'}`}
-                                />
-                                <Field
-                                  label="Moms"
-                                  value={`${Number(doc.vat_amount).toLocaleString('sv-SE', { minimumFractionDigits: 2 })} ${doc.currency ?? 'SEK'}`}
-                                />
-                              </>
-                            )}
-                            <Field label="Förfallodatum" value={doc.due_date} />
-                            <Field
-                              label="Fakturanummer"
-                              value={doc.invoice_number}
-                            />
-                            <Field label="OCR-nummer" value={doc.ocr_number} />
-                          </>
+
+                        {/* VAT breakdown per rate */}
+                        {doc.vat_breakdown && Array.isArray(doc.vat_breakdown) && doc.vat_breakdown.length > 1 && (
+                          <div className="text-sm">
+                            <dt className="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-2">
+                              Momsuppdelning
+                            </dt>
+                            <div className="overflow-x-auto">
+                              <Table.Root size="1">
+                                <Table.Header>
+                                  <Table.Row>
+                                    <Table.ColumnHeaderCell>Momssats</Table.ColumnHeaderCell>
+                                    <Table.ColumnHeaderCell justify="end">Netto</Table.ColumnHeaderCell>
+                                    <Table.ColumnHeaderCell justify="end">Moms</Table.ColumnHeaderCell>
+                                  </Table.Row>
+                                </Table.Header>
+                                <Table.Body>
+                                  {doc.vat_breakdown.map((entry: any, i: number) => (
+                                    <Table.Row key={i}>
+                                      <Table.Cell>{entry.rate}%</Table.Cell>
+                                      <Table.Cell justify="end" className="tabular-nums">
+                                        {Number(entry.net).toLocaleString('sv-SE', { minimumFractionDigits: 2 })}
+                                      </Table.Cell>
+                                      <Table.Cell justify="end" className="tabular-nums">
+                                        {Number(entry.vat).toLocaleString('sv-SE', { minimumFractionDigits: 2 })}
+                                      </Table.Cell>
+                                    </Table.Row>
+                                  ))}
+                                </Table.Body>
+                              </Table.Root>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Notes */}
+                        {doc.notes && (
+                          <div className="text-sm">
+                            <dt className="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-1">
+                              Anteckningar
+                            </dt>
+                            <dd className="whitespace-pre-wrap text-base-content/70">
+                              {doc.notes}
+                            </dd>
+                          </div>
+                        )}
+
+                        {/* Matched transactions */}
+                        {doc.matched_transactions?.length > 0 && (
+                          <div className="space-y-3">
+                            {doc.matched_transactions.map((mt: any) => (
+                              <div key={mt.match_id} className="bg-base-200/40 rounded-lg p-4 space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <a
+                                    href={`/transactions/${mt.txn_id}`}
+                                    className="text-xs font-semibold uppercase tracking-wider text-base-content/40 hover:text-primary transition-colors"
+                                    onClick={(e) => {
+                                      e.preventDefault()
+                                      onClose()
+                                      window.location.href = `/transactions/${mt.txn_id}`
+                                    }}
+                                  >
+                                    Matchad transaktion
+                                    <span className="ml-2 tabular-nums">#{mt.txn_id}</span>
+                                  </a>
+                                  <Button
+                                    variant="ghost"
+                                    size="1"
+                                    semantic="destructive"
+                                    onClick={() =>
+                                      unmatchMutation.mutate({
+                                        txnId: mt.txn_id,
+                                        docId: doc.id,
+                                      })
+                                    }
+                                    disabled={unmatchMutation.isPending}
+                                    icon={<Unlink />}
+                                    text="Ta bort matchning"
+                                  />
+                                </div>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                                  <Field label="Datum" value={mt.date} />
+                                  <Field label="Referens" value={mt.reference} />
+                                  <Field
+                                    label="Belopp"
+                                    value={
+                                      mt.amount !== null && mt.amount !== undefined
+                                        ? `${Number(mt.amount).toLocaleString('sv-SE', { minimumFractionDigits: 2 })} kr`
+                                        : null
+                                    }
+                                  />
+                                  <Field label="Konto" value={mt.account} />
+                                </div>
+                                {mt.confidence !== null && mt.confidence !== undefined && (
+                                  <p className="text-xs text-base-content/40">
+                                    Matchning: {mt.match_type} ({Math.round(mt.confidence)}%)
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Match transaction section (for unmatched matchable docs) */}
+                        {label.isMatchable(doc.doc_type) && !doc.is_matched && (
+                          <MatchTransactionSection
+                            doc={doc}
+                            onMatched={invalidate}
+                          />
+                        )}
+
+                        {/* Review status */}
+                        {doc.reviewed_at && (
+                          <p className="text-xs text-base-content/40">
+                            Granskad:{' '}
+                            {new Date(doc.reviewed_at).toLocaleString('sv-SE')}
+                          </p>
                         )}
                       </div>
-
-                      {/* VAT breakdown per rate */}
-                      {doc.vat_breakdown && Array.isArray(doc.vat_breakdown) && doc.vat_breakdown.length > 1 && (
-                        <div className="text-sm">
-                          <dt className="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-2">
-                            Momsuppdelning
-                          </dt>
-                          <div className="overflow-x-auto">
-                            <table className="table table-xs">
-                              <thead>
-                                <tr>
-                                  <th>Momssats</th>
-                                  <th className="text-right">Netto</th>
-                                  <th className="text-right">Moms</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {doc.vat_breakdown.map((entry: any, i: number) => (
-                                  <tr key={i}>
-                                    <td>{entry.rate}%</td>
-                                    <td className="text-right tabular-nums">
-                                      {Number(entry.net).toLocaleString('sv-SE', { minimumFractionDigits: 2 })}
-                                    </td>
-                                    <td className="text-right tabular-nums">
-                                      {Number(entry.vat).toLocaleString('sv-SE', { minimumFractionDigits: 2 })}
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Notes */}
-                      {doc.notes && (
-                        <div className="text-sm">
-                          <dt className="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-1">
-                            Anteckningar
-                          </dt>
-                          <dd className="whitespace-pre-wrap text-base-content/70">
-                            {doc.notes}
-                          </dd>
-                        </div>
-                      )}
-
-                      {/* Matched transactions */}
-                      {doc.matched_transactions?.length > 0 && (
-                        <div className="space-y-3">
-                          {doc.matched_transactions.map((mt: any) => (
-                            <div key={mt.match_id} className="bg-base-200/40 rounded-lg p-4 space-y-2">
-                              <div className="flex items-center justify-between">
-                                <a
-                                  href={`/transactions/${mt.txn_id}`}
-                                  className="text-xs font-semibold uppercase tracking-wider text-base-content/40 hover:text-primary transition-colors"
-                                  onClick={(e) => {
-                                    e.preventDefault()
-                                    onClose()
-                                    window.location.href = `/transactions/${mt.txn_id}`
-                                  }}
-                                >
-                                  Matchad transaktion
-                                  <span className="ml-2 tabular-nums">#{mt.txn_id}</span>
-                                </a>
-                                <button
-                                  className="btn btn-ghost btn-xs text-red-400 hover:text-red-600 gap-1"
-                                  onClick={() =>
-                                    unmatchMutation.mutate({
-                                      txnId: mt.txn_id,
-                                      docId: doc.id,
-                                    })
-                                  }
-                                  disabled={unmatchMutation.isPending}
-                                >
-                                  <Unlink className="w-3 h-3" />
-                                  Ta bort matchning
-                                </button>
-                              </div>
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                                <Field label="Datum" value={mt.date} />
-                                <Field label="Referens" value={mt.reference} />
-                                <Field
-                                  label="Belopp"
-                                  value={
-                                    mt.amount !== null && mt.amount !== undefined
-                                      ? `${Number(mt.amount).toLocaleString('sv-SE', { minimumFractionDigits: 2 })} kr`
-                                      : null
-                                  }
-                                />
-                                <Field label="Konto" value={mt.account} />
-                              </div>
-                              {mt.confidence !== null && mt.confidence !== undefined && (
-                                <p className="text-xs text-base-content/40">
-                                  Matchning: {mt.match_type} ({Math.round(mt.confidence)}%)
-                                </p>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Match transaction section (for unmatched matchable docs) */}
-                      {label.isMatchable(doc.doc_type) && !doc.is_matched && (
-                        <MatchTransactionSection
-                          doc={doc}
-                          onMatched={invalidate}
-                        />
-                      )}
-
-                      {/* Review status */}
-                      {doc.reviewed_at && (
-                        <p className="text-xs text-base-content/40">
-                          Granskad:{' '}
-                          {new Date(doc.reviewed_at).toLocaleString('sv-SE')}
-                        </p>
-                      )}
-                    </div>
+                    </Modal.Body>
 
                     {/* Footer actions */}
-                    <div className="flex justify-between px-6 py-4 bg-base-200/40 border-t border-base-200 rounded-b-2xl">
-                      <button
-                        className="btn btn-ghost btn-sm text-red-400 hover:text-red-600 gap-1"
-                        onClick={() => deleteMutation.mutate(doc.id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        Ta bort
-                      </button>
-                      <div className="flex gap-2">
-                        {!doc.is_archived && (
-                          <button
-                            className="btn btn-ghost btn-sm gap-1"
-                            onClick={() => archiveMutation.mutate(doc.id)}
-                          >
-                            <Archive className="w-4 h-4" />
-                            Arkivera
-                          </button>
-                        )}
-                        <button
-                          className="btn btn-primary btn-sm gap-1"
-                          onClick={() =>
-                            reviewMutation.mutate({
-                              id: doc.id,
-                              unreview: !!doc.reviewed_at,
-                            })
-                          }
-                          disabled={reviewMutation.isPending}
-                        >
-                          {doc.reviewed_at
-                            ? <EyeOff className="w-4 h-4" />
-                            : <Check className="w-4 h-4" />}
-                          {doc.reviewed_at
-                            ? 'Ångra granskning'
-                            : 'Markera granskad'}
-                        </button>
+                    <Modal.Footer>
+                      <div className="flex justify-between w-full">
+                        <Button
+                          variant="ghost"
+                          size="2"
+                          semantic="destructive"
+                          onClick={() => deleteMutation.mutate(doc.id)}
+                          icon={<Trash2 />}
+                          text="Ta bort"
+                        />
+                        <div className="flex gap-2">
+                          {!doc.is_archived && (
+                            <Button
+                              variant="ghost"
+                              size="2"
+                              onClick={() => archiveMutation.mutate(doc.id)}
+                              icon={<Archive />}
+                              text="Arkivera"
+                            />
+                          )}
+                          <Button
+                            semantic="action"
+                            size="2"
+                            onClick={() =>
+                              reviewMutation.mutate({
+                                id: doc.id,
+                                unreview: !!doc.reviewed_at,
+                              })
+                            }
+                            disabled={reviewMutation.isPending}
+                            icon={doc.reviewed_at ? <EyeOff /> : <Check />}
+                            text={doc.reviewed_at ? 'Ångra granskning' : 'Markera granskad'}
+                          />
+                        </div>
                       </div>
-                    </div>
+                    </Modal.Footer>
                   </>
                 )}
-        </div>
+        </>
       )}
-      <form method="dialog" className="modal-backdrop">
-        <button>close</button>
-      </form>
-    </dialog>
+    </Modal.Root>
   )
 }
 
@@ -442,239 +439,247 @@ function EditDocumentForm({
 
   return (
     <>
-      <div className="px-6 py-5 space-y-4">
-        {/* File link in edit mode too */}
-        {doc.file_id && doc.filename && (
-          <a
-            href={`/api/files/${doc.file_id}/view`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
-          >
-            <ExternalLink className="w-4 h-4" />
-            {doc.filename}
-          </a>
-        )}
-
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <div>
-            <label className="label text-sm">Typ</label>
-            <select
-              className="select select-bordered select-sm w-full"
-              value={docType}
-              onChange={(e) => setDocType(e.target.value)}
+      <Modal.Body>
+        <div className="space-y-4">
+          {/* File link in edit mode too */}
+          {doc.file_id && doc.filename && (
+            <a
+              href={`/api/files/${doc.file_id}/view`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
             >
-              <option value="invoice">Faktura</option>
-              <option value="receipt">Kvitto</option>
-              <option value="kvittens">Kvittens</option>
-              <option value="outgoing_invoice">Utgående faktura</option>
-              <option value="credit_note">Kreditnota</option>
-              <option value="reminder">Påminnelse</option>
-              <option value="contract">Avtal</option>
-              <option value="salary">Lönebesked</option>
-              <option value="statement">Kontoutdrag</option>
-              <option value="balansrapport">Balansrapport</option>
-              <option value="resultatrapport">Resultatrapport</option>
-              <option value="betalningssammanstalning">Betalningssammanställning</option>
-              <option value="other">Övrigt</option>
-            </select>
-          </div>
-          <div>
-            <label className="label text-sm">Part</label>
-            <select
-              className="select select-bordered select-sm w-full"
-              value={partyId}
-              onChange={(e) => setPartyId(e.target.value)}
-            >
-              <option value="">— Ingen —</option>
-              {parties.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="label text-sm">Datum</label>
-            <input
-              className="input input-bordered input-sm w-full"
-              type="date"
-              value={docDate}
-              onChange={(e) => setDocDate(e.target.value)}
-            />
-          </div>
-          {matchable && (
-            <>
-              <div>
-                <label className="label text-sm">Belopp</label>
-                <input
-                  className="input input-bordered input-sm w-full"
-                  type="number"
-                  step="0.01"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="label text-sm">Valuta</label>
-                <select
-                  className="select select-bordered select-sm w-full"
-                  value={currency}
-                  onChange={(e) => setCurrency(e.target.value)}
-                >
-                  <option value="SEK">SEK</option>
-                  <option value="EUR">EUR</option>
-                  <option value="USD">USD</option>
-                </select>
-              </div>
-              <div>
-                <label className="label text-sm">Förfallodatum</label>
-                <input
-                  className="input input-bordered input-sm w-full"
-                  type="date"
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="label text-sm">Fakturanummer</label>
-                <input
-                  className="input input-bordered input-sm w-full"
-                  value={invoiceNumber}
-                  onChange={(e) => setInvoiceNumber(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="label text-sm">OCR-nummer</label>
-                <input
-                  className="input input-bordered input-sm w-full"
-                  value={ocrNumber}
-                  onChange={(e) => setOcrNumber(e.target.value)}
-                />
-              </div>
-            </>
+              <ExternalLink className="w-4 h-4" />
+              {doc.filename}
+            </a>
           )}
-        </div>
-        <div>
-          <label className="label text-sm">Anteckningar</label>
-          <textarea
-            className="textarea textarea-bordered w-full text-sm"
-            rows={3}
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-          />
-        </div>
-        {(matchable || hasVatData || breakdown.length > 0) && (
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="label text-sm">Netto (exkl. moms)</label>
-                <input
-                  className="input input-bordered input-sm w-full"
-                  type="number"
-                  step="0.01"
-                  value={netAmount}
-                  onChange={(e) => setNetAmount(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="label text-sm">Moms</label>
-                <input
-                  className="input input-bordered input-sm w-full"
-                  type="number"
-                  step="0.01"
-                  value={vatAmount}
-                  onChange={(e) => setVatAmount(e.target.value)}
-                />
-              </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div>
+              <label className="label text-sm">Typ</label>
+              <Select.Root value={docType} onValueChange={(v: string | undefined) => setDocType(v ?? 'invoice')} size="2">
+                <Select.Trigger variant="surface" />
+                <Select.Content>
+                  <Select.Item value="invoice">Faktura</Select.Item>
+                  <Select.Item value="receipt">Kvitto</Select.Item>
+                  <Select.Item value="kvittens">Kvittens</Select.Item>
+                  <Select.Item value="outgoing_invoice">Utgående faktura</Select.Item>
+                  <Select.Item value="credit_note">Kreditnota</Select.Item>
+                  <Select.Item value="reminder">Påminnelse</Select.Item>
+                  <Select.Item value="contract">Avtal</Select.Item>
+                  <Select.Item value="salary">Lönebesked</Select.Item>
+                  <Select.Item value="statement">Kontoutdrag</Select.Item>
+                  <Select.Item value="balansrapport">Balansrapport</Select.Item>
+                  <Select.Item value="resultatrapport">Resultatrapport</Select.Item>
+                  <Select.Item value="betalningssammanstalning">Betalningssammanställning</Select.Item>
+                  <Select.Item value="other">Övrigt</Select.Item>
+                </Select.Content>
+              </Select.Root>
             </div>
             <div>
-              <label className="label text-sm">Momsuppdelning</label>
-              {breakdown.length > 0 && (
-                <table className="table table-xs table-fixed">
-                  <thead>
-                    <tr>
-                      <th className="w-24">Momssats %</th>
-                      <th className="w-32">Netto</th>
-                      <th className="w-32">Moms</th>
-                      <th className="w-8" />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {breakdown.map((row, i) => {
-                      const computedVat = row.rate && row.net
-                        ? (Number(row.net) * Number(row.rate) / 100).toFixed(2)
-                        : ''
-                      return (
-                        <tr key={i}>
-                          <td>
-                            <input
-                              className="input input-bordered input-xs w-20"
-                              type="number"
-                              step="any"
-                              value={row.rate}
-                              onChange={(e) => {
-                                const next = [...breakdown]
-                                next[i] = { ...row, rate: e.target.value, vat: '' }
-                                setBreakdown(next)
-                              }}
-                            />
-                          </td>
-                          <td>
-                            <input
-                              className="input input-bordered input-xs w-28"
-                              type="number"
-                              step="0.01"
-                              value={row.net}
-                              onChange={(e) => {
-                                const next = [...breakdown]
-                                next[i] = { ...row, net: e.target.value, vat: '' }
-                                setBreakdown(next)
-                              }}
-                            />
-                          </td>
-                          <td className="tabular-nums text-sm text-base-content/70">
-                            {computedVat}
-                          </td>
-                          <td>
-                            <button
-                              className="btn btn-ghost btn-xs text-error"
-                              onClick={() => setBreakdown(breakdown.filter((_, j) => j !== i))}
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              )}
-              <button
-                className="btn btn-ghost btn-xs"
-                onClick={() => setBreakdown([...breakdown, { rate: '25', net: '0', vat: '' }])}
-              >
-                + Lägg till rad
-              </button>
+              <label className="label text-sm">Part</label>
+              <Select.Root value={partyId || undefined} onValueChange={(v: string | undefined) => setPartyId(v ?? '')} size="2">
+                <Select.Trigger variant="surface" placeholder="— Ingen —" />
+                <Select.Content>
+                  {parties.map((p) => (
+                    <Select.Item key={p.id} value={String(p.id)}>
+                      {p.name}
+                    </Select.Item>
+                  ))}
+                </Select.Content>
+              </Select.Root>
             </div>
+            <div>
+              <label className="label text-sm">Datum</label>
+              <TextField.Root
+                size="2"
+                variant="surface"
+                type="date"
+                value={docDate}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setDocDate(e.target.value)}
+              />
+            </div>
+            {matchable && (
+              <>
+                <div>
+                  <label className="label text-sm">Belopp</label>
+                  <TextField.Root
+                    size="2"
+                    variant="surface"
+                    type="number"
+                    step="0.01"
+                    value={amount}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => setAmount(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="label text-sm">Valuta</label>
+                  <Select.Root value={currency} onValueChange={(v: string | undefined) => setCurrency(v ?? 'SEK')} size="2">
+                    <Select.Trigger variant="surface" />
+                    <Select.Content>
+                      <Select.Item value="SEK">SEK</Select.Item>
+                      <Select.Item value="EUR">EUR</Select.Item>
+                      <Select.Item value="USD">USD</Select.Item>
+                    </Select.Content>
+                  </Select.Root>
+                </div>
+                <div>
+                  <label className="label text-sm">Förfallodatum</label>
+                  <TextField.Root
+                    size="2"
+                    variant="surface"
+                    type="date"
+                    value={dueDate}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => setDueDate(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="label text-sm">Fakturanummer</label>
+                  <TextField.Root
+                    size="2"
+                    variant="surface"
+                    value={invoiceNumber}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => setInvoiceNumber(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="label text-sm">OCR-nummer</label>
+                  <TextField.Root
+                    size="2"
+                    variant="surface"
+                    value={ocrNumber}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => setOcrNumber(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
           </div>
-        )}
-      </div>
+          <div>
+            <label className="label text-sm">Anteckningar</label>
+            <TextArea.Root
+              size="2"
+              variant="surface"
+              rows={3}
+              value={notes}
+              onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value)}
+            />
+          </div>
+          {(matchable || hasVatData || breakdown.length > 0) && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="label text-sm">Netto (exkl. moms)</label>
+                  <TextField.Root
+                    size="2"
+                    variant="surface"
+                    type="number"
+                    step="0.01"
+                    value={netAmount}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => setNetAmount(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="label text-sm">Moms</label>
+                  <TextField.Root
+                    size="2"
+                    variant="surface"
+                    type="number"
+                    step="0.01"
+                    value={vatAmount}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => setVatAmount(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="label text-sm">Momsuppdelning</label>
+                {breakdown.length > 0 && (
+                  <Table.Root size="1">
+                    <Table.Header>
+                      <Table.Row>
+                        <Table.ColumnHeaderCell className="w-24">Momssats %</Table.ColumnHeaderCell>
+                        <Table.ColumnHeaderCell className="w-32">Netto</Table.ColumnHeaderCell>
+                        <Table.ColumnHeaderCell className="w-32">Moms</Table.ColumnHeaderCell>
+                        <Table.ColumnHeaderCell className="w-8" />
+                      </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
+                      {breakdown.map((row, i) => {
+                        const computedVat = row.rate && row.net
+                          ? (Number(row.net) * Number(row.rate) / 100).toFixed(2)
+                          : ''
+                        return (
+                          <Table.Row key={i}>
+                            <Table.Cell>
+                              <TextField.Root
+                                size="1"
+                                variant="surface"
+                                type="number"
+                                step="any"
+                                className="w-20"
+                                value={row.rate}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                                  const next = [...breakdown]
+                                  next[i] = { ...row, rate: e.target.value, vat: '' }
+                                  setBreakdown(next)
+                                }}
+                              />
+                            </Table.Cell>
+                            <Table.Cell>
+                              <TextField.Root
+                                size="1"
+                                variant="surface"
+                                type="number"
+                                step="0.01"
+                                className="w-28"
+                                value={row.net}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                                  const next = [...breakdown]
+                                  next[i] = { ...row, net: e.target.value, vat: '' }
+                                  setBreakdown(next)
+                                }}
+                              />
+                            </Table.Cell>
+                            <Table.Cell className="tabular-nums text-sm text-base-content/70">
+                              {computedVat}
+                            </Table.Cell>
+                            <Table.Cell>
+                              <Button
+                                variant="ghost"
+                                size="1"
+                                semantic="destructive"
+                                onClick={() => setBreakdown(breakdown.filter((_, j) => j !== i))}
+                                icon={<Trash2 />}
+                              />
+                            </Table.Cell>
+                          </Table.Row>
+                        )
+                      })}
+                    </Table.Body>
+                  </Table.Root>
+                )}
+                <Button
+                  variant="ghost"
+                  size="1"
+                  onClick={() => setBreakdown([...breakdown, { rate: '25', net: '0', vat: '' }])}
+                  text="+ Lägg till rad"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      </Modal.Body>
 
-      <div className="flex justify-end gap-2 px-6 py-4 bg-base-200/40 border-t border-base-200 rounded-b-2xl">
-        <button className="btn btn-ghost btn-sm" onClick={onCancel}>
-          Avbryt
-        </button>
-        <button
-          className="btn btn-primary btn-sm"
+      <Modal.Footer>
+        <Button variant="ghost" size="2" onClick={onCancel} text="Avbryt" />
+        <Button
+          semantic="action"
+          size="2"
           onClick={handleSave}
           disabled={isPending}
-        >
-          {isPending
-            ? <span className="loading loading-spinner loading-xs" />
-            : 'Spara'}
-        </button>
-      </div>
+          loading={isPending}
+          text="Spara"
+        />
+      </Modal.Footer>
     </>
   )
 }
@@ -736,26 +741,29 @@ function MatchTransactionSection({
 
       {/* Search input */}
       <div className="flex gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-base-content/30" />
-          <input
-            className="input input-bordered input-sm w-full pl-8"
-            type="text"
-            placeholder="Sök referens..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') doSearch(searchQuery)
-            }}
-          />
-        </div>
-        <button
-          className="btn btn-ghost btn-sm"
+        <TextField.Root
+          size="2"
+          variant="surface"
+          className="flex-1"
+          placeholder="Sök referens..."
+          value={searchQuery}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+            if (e.key === 'Enter') doSearch(searchQuery)
+          }}
+        >
+          <TextField.Slot side="left">
+            <Search className="w-3.5 h-3.5 opacity-30" />
+          </TextField.Slot>
+        </TextField.Root>
+        <Button
+          variant="ghost"
+          size="2"
           onClick={() => doSearch(searchQuery)}
           disabled={isSearching}
-        >
-          {isSearching ? <span className="loading loading-spinner loading-xs" /> : 'Sök'}
-        </button>
+          loading={isSearching}
+          text="Sök"
+        />
       </div>
 
       {/* Results */}
@@ -766,20 +774,20 @@ function MatchTransactionSection({
       )}
       {candidates.length > 0 && (
         <div className="overflow-x-auto max-h-48 overflow-y-auto">
-          <table className="table table-xs">
-            <thead>
-              <tr>
-                <th>Datum</th>
-                <th>Referens</th>
-                <th className="text-right">Belopp</th>
-                <th>Konto</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
+          <Table.Root size="1">
+            <Table.Header>
+              <Table.Row>
+                <Table.ColumnHeaderCell>Datum</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Referens</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell justify="end">Belopp</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Konto</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell />
+              </Table.Row>
+            </Table.Header>
+            <Table.Body>
               {candidates.map((txn) => (
-                <tr key={txn.id} className="hover">
-                  <td className="text-nowrap">
+                <Table.Row key={txn.id}>
+                  <Table.Cell className="text-nowrap">
                     {txn.date}
                     {doc.doc_date && txn.date && (() => {
                       const diff = Math.round((new Date(txn.date).getTime() - new Date(doc.doc_date).getTime()) / 86400000)
@@ -789,28 +797,29 @@ function MatchTransactionSection({
                         </span>
                       )
                     })()}
-                  </td>
-                  <td className="max-w-40 truncate" title={txn.reference}>
+                  </Table.Cell>
+                  <Table.Cell className="max-w-40 truncate" title={txn.reference}>
                     {txn.reference}
-                  </td>
-                  <td className="text-right tabular-nums text-nowrap">
+                  </Table.Cell>
+                  <Table.Cell justify="end" className="tabular-nums text-nowrap">
                     {Number(txn.amount).toLocaleString('sv-SE', { minimumFractionDigits: 2 })} kr
-                  </td>
-                  <td className="text-nowrap">{txn.account_name}</td>
-                  <td>
-                    <button
-                      className="btn btn-ghost btn-xs text-primary"
+                  </Table.Cell>
+                  <Table.Cell className="text-nowrap">{txn.account_name}</Table.Cell>
+                  <Table.Cell>
+                    <Button
+                      variant="ghost"
+                      size="1"
+                      semantic="action"
                       onClick={() => matchMutation.mutate(txn.id)}
                       disabled={matchMutation.isPending}
-                    >
-                      <LinkIcon className="w-3 h-3" />
-                      Matcha
-                    </button>
-                  </td>
-                </tr>
+                      icon={<LinkIcon />}
+                      text="Matcha"
+                    />
+                  </Table.Cell>
+                </Table.Row>
               ))}
-            </tbody>
-          </table>
+            </Table.Body>
+          </Table.Root>
         </div>
       )}
     </div>

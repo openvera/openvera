@@ -8,6 +8,7 @@ import {
   type Account,
   AmountCell,
   batchUpdateTransactions,
+  cn,
   DateCell,
   EmptyState,
   getBasAccounts,
@@ -188,7 +189,7 @@ export default function Transactions() {
       </div>
 
       {/* Batch edit bar */}
-      <div className={`bg-base-200 rounded-xl p-3 flex flex-wrap items-center gap-3 ${selectedIds.size === 0 ? 'opacity-40 pointer-events-none' : ''}`}>
+      <div className={cn('bg-base-200 rounded-xl p-3 flex flex-wrap items-center gap-3', { 'opacity-40 pointer-events-none': selectedIds.size === 0 })}>
         <span className="text-sm font-medium">
           {selectedIds.size} markerade
         </span>
@@ -278,7 +279,7 @@ export default function Transactions() {
                     {filtered.map((txn) => (
                       <Table.Row
                         key={txn.id}
-                        className={`cursor-pointer ${selectedIds.has(txn.id) ? 'bg-primary/5' : ''}`}
+                        className={cn('cursor-pointer', { 'bg-primary/5': selectedIds.has(txn.id) })}
                         onClick={() => navigate(`/transactions/${txn.id}`)}
                       >
                         <Table.Cell onClick={(e: MouseEvent<HTMLTableDataCellElement>) => e.stopPropagation()}>

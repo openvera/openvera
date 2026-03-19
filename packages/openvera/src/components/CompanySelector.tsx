@@ -8,10 +8,11 @@ import { useState } from 'react'
 import { Spinner } from '@radix-ui/themes'
 import { Button, Dropdown, TextField } from '@swedev/ui'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Building2, Check, ChevronDown, Plus } from 'lucide-react'
+import { Building2, ChevronDown, Plus } from 'lucide-react'
 
 import { createCompany } from '../api/companies'
 import { useCompany } from '../hooks/useCompany'
+import { cn } from '../utils'
 
 type DropdownItemSelectEvent = Parameters<
   NonNullable<ComponentProps<typeof Dropdown.Item>['onSelect']>
@@ -60,7 +61,11 @@ export default function CompanySelector() {
         </Button>
       </Dropdown.Trigger>
 
-      <Dropdown.Content align="end" className="w-72">
+      <Dropdown.Content
+        variant="soft"
+        align="end"
+        className="min-w-56"
+      >
         <Dropdown.Label>Välj företag</Dropdown.Label>
 
         {companies.map((c) => {
@@ -76,19 +81,19 @@ export default function CompanySelector() {
             >
               <div className="flex items-center gap-3 w-full">
                 <div
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                    isActive
-                      ? 'bg-primary/10 text-primary'
-                      : 'bg-base-200/60 text-base-content/40'
-                  }`}
+                  className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0', {
+                    'bg-primary/10 text-primary': isActive,
+                    'bg-base-200/60 text-base-content/40': !isActive,
+                  })}
                 >
                   <Building2 />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p
-                    className={`text-sm truncate ${
-                      isActive ? 'font-semibold text-primary' : 'font-medium'
-                    }`}
+                    className={cn('text-sm text-nowrap', {
+                      'font-semibold text-primary': isActive,
+                      'font-medium': !isActive,
+                    })}
                   >
                     {c.name}
                   </p>
@@ -98,9 +103,6 @@ export default function CompanySelector() {
                     </p>
                   )}
                 </div>
-                {isActive && (
-                  <Check className="text-primary shrink-0" />
-                )}
               </div>
             </Dropdown.Item>
           )

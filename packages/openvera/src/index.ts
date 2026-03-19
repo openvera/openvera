@@ -1,3 +1,6 @@
+// Utils
+export { cn } from './utils'
+
 // Config & Provider
 export { configure } from './config'
 export { OpenVeraProvider } from './OpenVeraProvider'
@@ -29,3 +32,4 @@ export { default as DocumentDetailModal } from './components/DocumentDetailModal
 export { default as EmptyState } from './components/EmptyState'
 export { default as FormModal } from './components/FormModal'
 export { default as StatusBadge } from './components/StatusBadge'
+export { default as TransactionDetailModal } from './components/TransactionDetailModal'

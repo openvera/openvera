@@ -14,6 +14,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import {
+  cn,
   deleteFileByPath,
   EmptyState,
   type FileTreeNode,
@@ -240,7 +241,7 @@ function TreeNode({ node, depth, showDuplicates, onDelete }: { node: FileTreeNod
 
   return (
     <li className="group flex items-center gap-1.5 py-0.5 px-1 ml-[18px]">
-      <File className={`w-3 h-3 ${node.is_duplicate ? 'text-warning/50' : 'text-base-content/30'}`} />
+      <File className={cn('w-3 h-3', { 'text-warning/50': node.is_duplicate, 'text-base-content/30': !node.is_duplicate })} />
       <a
         href={`/api/files/view-by-path?path=${encodeURIComponent(node.path)}`}
         target="_blank"

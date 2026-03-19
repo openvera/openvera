@@ -8,6 +8,7 @@ import {
   AmountCell,
   archiveDocument,
   batchUpdateDocuments,
+  cn,
   ConfirmDialog,
   DateCell,
   deleteDocument,
@@ -258,7 +259,7 @@ export default function Documents() {
       </div>
 
       {/* Batch edit bar */}
-      <div className={`bg-base-200 rounded-xl p-3 flex flex-wrap items-center gap-3 ${selectedIds.size === 0 ? 'opacity-40 pointer-events-none' : ''}`}>
+      <div className={cn('bg-base-200 rounded-xl p-3 flex flex-wrap items-center gap-3', { 'opacity-40 pointer-events-none': selectedIds.size === 0 })}>
         <span className="text-sm font-medium">
           {selectedIds.size} markerade
         </span>
@@ -361,7 +362,7 @@ export default function Documents() {
                     {filtered.map((doc) => (
                       <Table.Row
                         key={doc.id}
-                        className={`cursor-pointer ${selectedIds.has(doc.id) ? 'bg-primary/5' : ''}`}
+                        className={cn('cursor-pointer', { 'bg-primary/5': selectedIds.has(doc.id) })}
                         onClick={() => setDetailId(doc.id)}
                       >
                         <Table.Cell onClick={(e: MouseEvent<HTMLTableDataCellElement>) => e.stopPropagation()}>
@@ -456,7 +457,7 @@ export default function Documents() {
                               variant={doc.reviewed_at ? 'soft' : 'ghost'}
                               {...(doc.reviewed_at ? { semantic: 'success' as const } : {})}
                               size="1"
-                              className={`tooltip ${!doc.reviewed_at ? 'opacity-30' : ''}`}
+                              className={cn('tooltip', { 'opacity-30': !doc.reviewed_at })}
                               data-tip={doc.reviewed_at ? 'Ångra granskning' : 'Markera granskad'}
                               onClick={() =>
                                 reviewMutation.mutate({

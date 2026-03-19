@@ -16,6 +16,7 @@ export default defineConfig({
         'react', 'react-dom', 'react/jsx-runtime',
         '@radix-ui/themes', '@swedev/ui', '@tanstack/react-query',
         'lucide-react',
+        'clsx', 'tailwind-merge',
         'react-router',
       ],
     },

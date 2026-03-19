@@ -7,6 +7,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, CheckCircle, Link as LinkIcon, Pencil, RefreshCw, Trash2, XCircle } from 'lucide-react'
 import {
   AmountCell,
+  cn,
   ConfirmDialog,
   DateCell,
   deleteTransaction,
@@ -134,7 +135,7 @@ export default function TransactionDetail() {
         />
       </div>
 
-      <div className={`grid grid-cols-1 gap-6 ${matches.length > 0 || txn.needs_receipt !== 0 ? 'lg:grid-cols-2' : ''}`}>
+      <div className={cn('grid grid-cols-1 gap-6', { 'lg:grid-cols-2': matches.length > 0 || txn.needs_receipt !== 0 })}>
         {/* Info card */}
         <div className="bg-base-100 rounded-xl shadow-sm p-5 space-y-4">
           <h2 className="text-sm font-semibold uppercase tracking-wider text-base-content/50">
