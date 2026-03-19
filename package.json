@@ -14,7 +14,8 @@
     "lint:fix": "eslint frontend packages --fix",
     "lint:frontend": "npm run lint --workspace openvera-frontend",
     "typecheck:frontend": "npm run typecheck --workspace openvera-frontend",
-    "knip:frontend": "npm run knip --workspace openvera-frontend"
+    "knip:frontend": "npm run knip --workspace openvera-frontend",
+    "precommit": "npm run lint:fix && npm run typecheck:frontend && npm run knip:frontend"
   },
   "devDependencies": {
     "@eslint/compat": "^2.0.2",

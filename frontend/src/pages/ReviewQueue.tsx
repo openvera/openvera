@@ -56,7 +56,7 @@ export default function ReviewQueue() {
     onSuccess: invalidateAll,
   })
 
-  const verifyMutation = useMutation({
+  useMutation({
     mutationFn: (id: number) => verifyDocumentData(id),
     onSuccess: invalidateAll,
   })
