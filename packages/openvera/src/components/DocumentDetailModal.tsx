@@ -306,8 +306,8 @@ export default function DocumentDetailModal({ docId, onClose, onUpdated }: Props
                                 )}
                                 <p className="text-xs text-base-content/40">
                                   {mt.approved_at
-                                    ? `Matchning godkand ${new Date(mt.approved_at).toLocaleString('sv-SE')}`
-                                    : 'Matchning vantar godkannande'}
+                                    ? `Matchning godkänd ${new Date(mt.approved_at).toLocaleString('sv-SE')}`
+                                    : 'Matchning väntar godkännande'}
                                 </p>
                               </div>
                             ))}
