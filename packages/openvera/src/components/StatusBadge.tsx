@@ -44,51 +44,51 @@ export default function StatusBadge({
     if (!label.isMatchable(docType)) {
       return verified
         ? (
-            <span className="badge badge-success badge-sm gap-1">
+            <Badge semantic="success">
               <ClipboardCheck className="w-3 h-3" />
               Verifierad
-            </span>
+            </Badge>
           )
         : (
-            <span className="badge badge-warning badge-sm gap-1">
+            <Badge semantic="warning">
               <XCircle className="w-3 h-3" />
               Ej verifierad
-            </span>
+            </Badge>
           )
     }
 
     if (!verified) {
       return (
-        <span className="badge badge-warning badge-sm gap-1">
+        <Badge semantic="warning">
           <XCircle className="w-3 h-3" />
           Ej verifierad
-        </span>
+        </Badge>
       )
     }
 
     if (matched && approved) {
       return (
-        <span className="badge badge-success badge-sm gap-1">
+        <Badge semantic="success">
           <CheckCircle className="w-3 h-3" />
           Klar
-        </span>
+        </Badge>
       )
     }
 
     if (matched) {
       return (
-        <span className="badge badge-info badge-sm gap-1">
+        <Badge semantic="info">
           <Link className="w-3 h-3" />
           Matchning vantar
-        </span>
+        </Badge>
       )
     }
 
     return (
-      <span className="badge badge-error badge-sm gap-1">
+      <Badge semantic="error">
         <XCircle className="w-3 h-3" />
         Ej matchad
-      </span>
+      </Badge>
     )
   }
 
